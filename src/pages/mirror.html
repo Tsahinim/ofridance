@@ -1,0 +1,88 @@
+<!--title: המראה · OFRIDANCE-->
+<!--desc: המצלמה הופכת למראה חכמה: שלד תנועה בזמן אמת, אתגרי תנוחה עם ציון, וציור באוויר בעקבות הידיים והרגליים. הכול רץ במכשיר, שום תמונה לא נשלחת.-->
+<!--theme: dark-->
+<!--active: studio-->
+<!--head: <link rel="stylesheet" href="assets/css/tools.css">-->
+<!--scripts: <script type="module" src="assets/js/mirror.js"></script>-->
+
+<main id="main">
+  <section class="page-hero" aria-labelledby="t">
+    <h1 id="t" class="monument" data-rise>המראה</h1>
+    <div class="under">
+      <p class="lead" data-rise style="--i:1">המצלמה מזהה את הגוף ומציירת עליו שלד בזמן אמת. נסו להיכנס לתנוחה, לקפוא על "שמונה", או לצייר באוויר עם הידיים.</p>
+      <p class="jump" data-rise style="--i:2"><a class="link" href="#privacy">פרטיות</a><a class="link" href="#play">משחקים לנסות</a></p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="המראה" style="padding-top:2.5rem">
+    <div id="mirror-app" class="mirror-app">
+      <div class="mirror-view">
+        <video playsinline muted></video>
+        <canvas></canvas>
+        <div class="placeholder"><div><p style="font-size:1.375rem;font-weight:500">הניחו את המכשיר במרחק שלושה צעדים, כך שכל הגוף ייכנס לתמונה.</p><p class="small" style="color:#aaa;margin-top:.6rem">הזיהוי רץ בתוך הדפדפן. שום תמונה לא נשמרת ולא נשלחת.</p></div></div>
+        <svg class="target" viewBox="0 0 100 130" aria-hidden="true"></svg>
+        <div class="score"><b>·</b><span></span></div>
+      </div>
+      <aside class="mirror-side">
+        <button id="cam" class="button" type="button">הפעלת המצלמה</button>
+        <p class="status small" role="status" style="color:#bbb">המצלמה כבויה.</p>
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:600">מצב</h2>
+          <div class="pose-list" style="margin-top:8px">
+            <button class="chip" type="button" data-mode="skeleton" aria-pressed="true">שלד</button>
+            <button class="chip" type="button" data-mode="pose" aria-pressed="false">תנוחה וציון</button>
+            <button class="chip" type="button" data-mode="trails" aria-pressed="false">ציור באוויר</button>
+            <button id="game" class="chip" type="button">קפאו על 8</button>
+          </div>
+        </div>
+        <div>
+          <h2 style="font-size:1.25rem;font-weight:600">התנוחה</h2>
+          <div class="pose-list" style="margin-top:8px">
+            <button class="chip" type="button" data-pose="t" aria-pressed="true">טי</button>
+            <button class="chip" type="button" data-pose="v">וי</button>
+            <button class="chip" type="button" data-pose="up">למעלה</button>
+            <button class="chip" type="button" data-pose="plie">פליה</button>
+            <button class="chip" type="button" data-pose="hit">היט</button>
+            <button class="chip" type="button" data-pose="point">פוינט</button>
+          </div>
+          <p class="pose-hint small" style="color:#ddd;margin-top:8px"></p>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="play" class="chapter wrap" aria-labelledby="play-h">
+    <header><h2 id="play-h">משחקים לנסות</h2></header>
+    <div class="body">
+      <h3>תנוחה וציון</h3>
+      <p>בוחרים תנוחה, והמראה משווה את הזוויות של הכתפיים, המרפקים והברכיים שלכן לתנוחה שבפינה. ככל שהזוויות קרובות יותר, הציון גבוה יותר. מעל 85 זה מדויק.</p>
+      <h3>קפאו על שמונה</h3>
+      <p>המראה סופרת "חמש, שש, שבע, שמונה", ועל שמונה צריך להיות בתנוחה ולקפוא. זה בדיוק התרגיל של היט: להגיע לצורה בזמן ולהחזיק אותה בלי לזוז.</p>
+      <h3>ציור באוויר</h3>
+      <p>הידיים משאירות שובל אדום והרגליים שובל לבן. נסו לכתוב את השם שלכן עם הגוף, לצייר עיגול גדול עם שתי הידיים יחד, או לרקוד משפט ולראות את הצורה שהוא משאיר. במחול מודרני זו דרך מוכרת לייצר חומר תנועה.</p>
+      <div class="tip"><strong>כדי שהזיהוי יעבוד טוב</strong>אור מלפנים ולא מאחור, רקע פשוט, ובגדים שלא נבלעים ברקע. המצלמה צריכה לראות גם את הכפות וגם את הקרסוליים.</div>
+    </div>
+  </section>
+
+  <section id="privacy" class="chapter wrap field-paper" aria-labelledby="privacy-h">
+    <header><h2 id="privacy-h">פרטיות</h2></header>
+    <div class="body">
+      <p><strong>שום תמונה לא יוצאת מהמכשיר.</strong> זיהוי התנועה נעשה בתוך הדפדפן, על ידי מודל קטן של <bdi lang="en">Google MediaPipe</bdi> שהדפדפן מוריד פעם אחת. הווידאו לא מוקלט, לא נשמר ולא נשלח לשום שרת, גם לא לנו.</p>
+      <p>המצלמה פועלת רק אחרי שלוחצים על "הפעלת המצלמה" ומאשרים בדפדפן, ונכבית בלחיצה על "כיבוי המצלמה" או כשסוגרים את הדף.</p>
+      <p>לרקדניות מתחת לגיל 18: כדאי שמבוגר יידע שאתן משתמשות במצלמה, כמו בכל אתר.</p>
+    </div>
+  </section>
+
+  <section aria-label="תמונות">
+    <div class="band" data-stagger>
+      <a href="modern.html#laban"><img src="assets/img/md-white-3.webp" width="1600" height="900" alt="רקדנית מושיטה יד למעלה מול רקע לבן" loading="lazy"><span class="panel-title">להסתכל ולתקן</span></a><a href="hiphop.html#styles" aria-label="רקדנית בתנוחה נמוכה וחזקה על רקע לבן"><img src="assets/img/hh-krump.webp" width="1600" height="1600" alt="רקדנית בתנוחה נמוכה וחזקה על רקע לבן" loading="lazy"></a><a href="modern.html" aria-label="רקדנית מושיטה יד בחדר בטון"><img src="assets/img/md-concrete.webp" width="1600" height="2400" alt="רקדנית מושיטה יד בחדר בטון" loading="lazy"></a><a href="hiphop.html#crew" aria-label="שתי רקדניות בחושך בתנוחה דומה"><img src="assets/img/hh-duo.webp" width="1600" height="2133" alt="שתי רקדניות בחושך בתנוחה דומה" loading="lazy"></a>
+    </div>
+    <p class="band-caption">המראה בסטודיו היא הכלי הוותיק ביותר של רקדניות. זו הגרסה החכמה שלה.</p>
+  </section>
+
+  <a class="cta-band" href="dancer.html">
+    <span class="what">רוצות תנוחות חדשות לתרגל? הרקדנית בתלת-ממד מדגימה אותן מכל זווית.</span>
+    <svg class="arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M38 38 L10 10 M10 34 V10 H34" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    <span class="verb">לתרגל</span>
+  </a>
+</main>

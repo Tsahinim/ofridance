@@ -1,0 +1,97 @@
+<!--title: בונה השמיניות · OFRIDANCE-->
+<!--desc: בונים משפט ריקוד בשמיניות: בוחרים תנועות היפ הופ או מודרני, מניחים אותן על הספירות, ורקדנית בתלת-ממד מבצעת את המשפט עם קצב וספירה.-->
+<!--theme: dark-->
+<!--active: studio-->
+<!--head: <link rel="stylesheet" href="assets/css/tools.css">\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>-->
+<!--scripts: <script type="module" src="assets/js/counts.js"></script>-->
+
+<main id="main">
+  <section class="page-hero" aria-labelledby="t">
+    <h1 id="t" class="monument" data-rise>שמיניות</h1>
+    <div class="under">
+      <p class="lead" data-rise style="--i:1">כמעט כל ריקוד נספר בקבוצות של שמונה. בוחרים ספירה, בוחרים תנועה, ורואים את הרקדנית מבצעת את המשפט שלכן על הקצב.</p>
+      <p class="jump" data-rise style="--i:2"><a class="link" href="#why">למה דווקא שמונה</a><a class="link" href="#count">איך סופרים שיר</a><a class="link" href="#use">איך משתמשים</a></p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="בונה השמיניות" style="padding-top:2.5rem">
+    <div id="counts-app" class="counts-app">
+      <div class="viewport" aria-label="רקדנית בתלת-ממד. גוררים כדי לסובב.">
+        <div class="count-hud"><span class="big-count">·</span><div class="now-move"></div></div>
+      </div>
+      <div class="side">
+        <div class="transport">
+          <button id="play" class="button" type="button" aria-pressed="false">נגן עם ספירה</button>
+          <label>סגנון <select id="style" style="min-height:2.75rem;background:#232323;border:0;padding:0 .5rem"><option value="hiphop">היפ הופ</option><option value="modern">מודרני</option></select></label>
+          <label>קצב <input id="bpm" type="range" min="60" max="140" value="96"> <output id="bpm-out">96</output></label>
+          <label><input id="countin" type="checkbox" checked> 5, 6, 7, 8 לפני</label>
+          <label><input id="beat" type="checkbox" checked> ביט</label>
+          <label><input id="voice" type="checkbox"> ספירה בקול</label>
+          <label><input id="mirror" type="checkbox"> מראה</label>
+        </div>
+        <div class="transport eight-tabs" aria-label="שמיניות במשפט"></div>
+        <div class="eight-grid" aria-label="שמונה ספירות"></div>
+        <div class="moves">
+          <div class="tabs"><button class="chip" type="button" data-tab="hiphop">תנועות היפ הופ</button><button class="chip" type="button" data-tab="modern">תנועות מודרני</button></div>
+          <div class="move-list"></div>
+        </div>
+        <div class="transport">
+          <button id="sample-hh" class="chip" type="button">משפט לדוגמה: היפ הופ</button>
+          <button id="sample-md" class="chip" type="button">משפט לדוגמה: מודרני</button>
+          <button id="remove" class="chip" type="button">הסרת התנועה בספירה</button>
+          <button id="clear" class="chip" type="button">ניקוי</button>
+          <button id="share" class="chip" type="button">העתקת קישור</button>
+        </div>
+      </div>
+    </div>
+    <noscript><p class="wrap">בונה השמיניות צריך JavaScript.</p></noscript>
+    <div class="flash" role="status" aria-live="polite"></div>
+  </section>
+
+  <section id="why" class="chapter wrap" aria-labelledby="why-h">
+    <header><h2 id="why-h">למה דווקא שמונה</h2><figure><img src="assets/img/hh-crew-yellow.webp" width="1600" height="1067" alt="קבוצת רקדניות נכנסות יחד לתנוחה מול קיר צהוב" loading="lazy"></figure></header>
+    <div class="body">
+      <p>רוב המוזיקה שרוקדים עליה, מפופ והיפ הופ ועד רוב המוזיקה למחול, כתובה במשקל של ארבע פעמות לתיבה. שתי תיבות הן שמונה פעמות, וזה בדיוק אורך של "משפט" נוח לגוף: מספיק ארוך כדי להגיד משהו, מספיק קצר כדי לזכור.</p>
+      <div class="count-strip" aria-hidden="true"><span class="on">1<em>מתחילים</em></span><span>2</span><span>3</span><span>4<em>חצי</em></span><span class="on">5<em>חצי שני</em></span><span>6</span><span>7</span><span>8<em>סוגרים</em></span></div>
+      <p>ארבע שמיניות יוצרות בדרך כלל יחידה מוזיקלית גדולה יותר: בית, פזמון, או קטע ביניים. לכן שינויים גדולים בשיר, כמו כניסה של תופים או של פזמון, קורים לרוב על "אחת" של שמינייה חדשה, ואפשר לתכנן אותם מראש.</p>
+      <h3>חמש, שש, שבע, שמונה</h3>
+      <p>כשמורה אומרת "חמש, שש, שבע, שמונה", היא סופרת את החצי השני של השמינייה שלפני ההתחלה. ככה כולן שומעות את הקצב ונכנסות יחד על "אחת". בבונה השמיניות הספירה הזאת מושמעת לפני כל ניגון.</p>
+      <h3>וגם</h3>
+      <p>בין כל שתי ספירות יש "וגם": החצי של הפעמה. בהיפ הופ הרבה מהגרוב קורה שם, למשל באונס שיורד על הספירה ועולה על ה"וגם". סופרים כך: אחת וגם שתיים וגם שלוש וגם.</p>
+    </div>
+  </section>
+
+  <section id="count" class="chapter wrap field-paper" aria-labelledby="count-h">
+    <header><h2 id="count-h">איך סופרים שיר</h2></header>
+    <div class="body">
+      <p><strong>מוצאים את הפעמה.</strong> מקישים ברגל עם השיר. ההקשה הקבועה הזאת היא הפעמה, וכל הקשה היא ספירה אחת.</p>
+      <p><strong>מוצאים את ה"אחת".</strong> בדרך כלל זו הפעמה החזקה ביותר, שבה נכנס תוף בס או שבה מתחילה שורה בשיר. סופרים משם עד שמונה ומתחילים שוב.</p>
+      <p><strong>בודקים את עצמכן.</strong> אם הפזמון מתחיל בדיוק על "אחת", כנראה ספרתן נכון. אם הוא מתחיל על "חמש", התחלתן לספור באמצע.</p>
+      <p><strong>רושמים מפה.</strong> כמה שמיניות פתיחה, כמה שמיניות בית, איפה הפזמון. הדף הזה נקרא דף ספירות, והוא הבסיס לכל כוריאוגרפיה. בפרק <a class="link" href="create.html#music">איך יוצרים קטע</a> יש דוגמה מלאה.</p>
+      <div class="tip"><strong>קצב השיר</strong>הקצב נמדד בפעמות לדקה, באנגלית <bdi lang="en">BPM</bdi>. היפ הופ נע בדרך כלל בין 85 ל-100, פופ סביב 100 עד 128. בקצב 120, שמינייה נמשכת ארבע שניות בדיוק.</div>
+    </div>
+  </section>
+
+  <section id="use" class="chapter wrap" aria-labelledby="use-h">
+    <header><h2 id="use-h">איך משתמשים</h2></header>
+    <div class="body">
+      <p>לוחצים על ספירה ריקה, ואז על תנועה מהרשימה. התנועה תופסת את מספר הספירות שלה: באונס תופס שתיים, צעד צד ארבע. הרקדנית מדגימה מיד את התנועה מאותה ספירה.</p>
+      <p>"נגן עם ספירה" מנגן את כל המשפט עם ביט, אחרי ספירת "חמש, שש, שבע, שמונה". אפשר להוסיף עד ארבע שמיניות, כלומר משפט של 32 ספירות.</p>
+      <p>גוררים על הרקדנית כדי לסובב אותה ולראות את התנועה מהצד או מאחור. "מראה" הופך את הצדדים, כמו שרואים מורה שעומדת מולכן בסטודיו.</p>
+      <p>רוצות ללמוד תנועה לאט? ב<a class="link" href="dancer.html">דף הרקדנית בתלת-ממד</a> כל תנועה מוסברת, ואפשר להאט אותה עד רבע מהמהירות.</p>
+    </div>
+  </section>
+
+  <section aria-label="תמונות">
+    <div class="band" data-stagger>
+      <a href="hiphop.html#music"><img src="assets/img/hh-neon.webp" width="1600" height="2727" alt="רקדנית בתאורה ורודה וירוקה" loading="lazy"><span class="panel-title">משפט אחד, שמונה ספירות</span></a><a href="modern.html#principles" aria-label="רקדנית בבגד שחור בסטודיו לבן"><img src="assets/img/md-white-5.webp" width="1600" height="900" alt="רקדנית בבגד שחור בסטודיו לבן" loading="lazy"></a><a href="hiphop.html#basics" aria-label="רקדנית קופצת מול קיר עם פס אדום"><img src="assets/img/hh-jump-red.webp" width="1600" height="2400" alt="רקדנית קופצת מול קיר עם פס אדום" loading="lazy"></a><a href="modern.html" aria-label="רקדנית במכנסיים צהובים בתנועה רחבה"><img src="assets/img/md-yellow.webp" width="1600" height="2400" alt="רקדנית במכנסיים צהובים בתנועה רחבה" loading="lazy"></a>
+    </div>
+    <p class="band-caption">שמונה ספירות, אינסוף דרכים למלא אותן.</p>
+  </section>
+
+  <a class="cta-band" href="stage.html">
+    <span class="what">יש לכן משפט? עכשיו מעמידים אותו על הבמה, עם כל הקבוצה.</span>
+    <svg class="arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M38 38 L10 10 M10 34 V10 H34" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    <span class="verb">להעמיד</span>
+  </a>
+</main>

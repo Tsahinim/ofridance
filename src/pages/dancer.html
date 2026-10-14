@@ -1,0 +1,75 @@
+<!--title: הרקדנית בתלת-ממד · OFRIDANCE-->
+<!--desc: ספריית תנועות היפ הופ ומחול מודרני שרקדנית בתלת-ממד מדגימה: מסובבים, מאטים, הופכים למראה, וקוראים איך עושים כל תנועה.-->
+<!--theme: dark-->
+<!--active: studio-->
+<!--head: <link rel="stylesheet" href="assets/css/tools.css">\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>-->
+<!--scripts: <script type="module" src="assets/js/dancer-page.js"></script>-->
+
+<main id="main">
+  <section class="page-hero" aria-labelledby="t">
+    <h1 id="t" class="monument" data-rise>תלת-ממד</h1>
+    <div class="under">
+      <p class="lead" data-rise style="--i:1">רקדנית שלא מתעייפת: בוחרים תנועה, מסובבים אותה לכל זווית, ומאטים עד שכל מפרק ברור.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="ספריית התנועות" style="padding-top:2.5rem">
+    <div id="dancer-app" class="dancer-app">
+      <div class="side">
+        <div class="style-tabs" style="display:flex;gap:6px"><button class="chip" type="button" data-style="hiphop" style="background:#262626;color:#fff">היפ הופ</button><button class="chip" type="button" data-style="modern" style="background:#262626;color:#fff">מודרני</button></div>
+        <div class="move-list" style="grid-template-columns:1fr;max-height:none"></div>
+      </div>
+      <div style="display:grid;gap:8px;min-width:0">
+        <div class="viewport" aria-label="רקדנית בתלת-ממד. גוררים כדי לסובב, גלגלת לזום.">
+          <div class="count-hud"><span class="big-count">·</span></div>
+        </div>
+        <div class="transport">
+          <button id="play" class="button" type="button">עצירה</button>
+          <label>מהירות <input id="speed" type="range" min="0.25" max="1.5" step="0.25" value="1"> <output id="speed-out">×1</output></label>
+          <label><input id="mirror" type="checkbox"> מראה</label>
+          <span class="spacer"></span>
+          <button class="chip" type="button" data-view="front">מלפנים</button>
+          <button class="chip" type="button" data-view="side">מהצד</button>
+          <button class="chip" type="button" data-view="back">מאחור</button>
+          <button class="chip" type="button" data-view="three">באלכסון</button>
+          <button class="chip" type="button" data-view="top">מלמעלה</button>
+        </div>
+        <div class="explain" aria-live="polite">
+          <h3></h3>
+          <p class="len" style="color:#9a9a9a;font-size:.9375rem"></p>
+          <p class="how"></p>
+          <p class="tip" style="color:#fff"></p>
+        </div>
+      </div>
+    </div>
+    <noscript><p class="wrap">הרקדנית בתלת-ממד צריכה JavaScript.</p></noscript>
+  </section>
+
+  <section id="learn" class="chapter wrap" aria-labelledby="learn-h">
+    <header><h2 id="learn-h">איך לומדים תנועה חדשה</h2></header>
+    <div class="body">
+      <h3>קודם רגליים, אחר כך ידיים</h3>
+      <p>הרגליים מחזיקות את המשקל ואת הקצב. לומדים קודם מה הרגליים עושות על כל ספירה, ורק כשזה יושב מוסיפים זרועות, ובסוף ראש ומבט.</p>
+      <h3>לאט, ואז בקצב</h3>
+      <p>מתחילים בחצי מהירות, ספירה אחרי ספירה. כשהתנועה זורמת בלי לחשוב, מעלים לשלושה רבעים ואז למהירות מלאה. מחוון המהירות כאן עושה בדיוק את זה.</p>
+      <h3>מראה או לא מראה</h3>
+      <p>מורה שעומדת מולכן עושה את התנועה "במראה": כשהיא מרימה יד ימין, אתן מרימות שמאל, כדי שתראו אותו צד. הסימון "מראה" מראה את הרקדנית כך.</p>
+      <h3>מכל הזוויות</h3>
+      <p>הרבה תנועות נראות אחרת מהצד. ברוק, למשל, רק מהצד רואים שהחזה באמת נשען קדימה ואחורה. סובבו את הרקדנית לפני שאתן מתרגלות.</p>
+      <div class="tip"><strong>מה הדמות לא יודעת לעשות</strong>הרקדנית בתלת-ממד היא מודל פשוט: אין לה כפות ידיים, ואין בה טקסטורה או רגש. היא מראה את הצורה והתזמון. את הסטייל, הנשימה והאופי מוסיפות אתן.</div>
+    </div>
+  </section>
+
+  <section aria-label="תמונות">
+    <div class="band" data-stagger>
+      <a href="modern.html#techniques"><img src="assets/img/md-white-2.webp" width="1600" height="900" alt="רקדנית בפליה רחבה בסטודיו לבן" loading="lazy"><span class="panel-title">מהמודל לגוף</span></a><a href="hiphop.html#styles" aria-label="רקדנית מול קיר גרפיטי"><img src="assets/img/hh-wall.webp" width="1600" height="2400" alt="רקדנית מול קיר גרפיטי" loading="lazy"></a><a href="modern.html" aria-label="רקדנית בועטת רגל לצד, בשחור לבן"><img src="assets/img/md-bw-kick.webp" width="1600" height="2400" alt="רקדנית בועטת רגל לצד, בשחור לבן" loading="lazy"></a><a href="hiphop.html" aria-label="רקדנית קופצת בסמטה"><img src="assets/img/hh-graffiti-jump.webp" width="1600" height="2400" alt="רקדנית קופצת בסמטה" loading="lazy"></a>
+    </div>
+    <p class="band-caption">הרקדנית בתלת-ממד מראה צורה. רקדניות אמיתיות מוסיפות לה נשמה.</p>
+  </section>
+
+  <a class="cta-band" href="counts.html">
+    <span class="what">מכירות כמה תנועות? מחברים אותן למשפט של שמונה ספירות.</span>
+    <svg class="arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M38 38 L10 10 M10 34 V10 H34" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    <span class="verb">לחבר</span>
+  </a>
+</main>

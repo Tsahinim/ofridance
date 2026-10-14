@@ -1,0 +1,4 @@
+.taste-skill/
+.claude/
+*.bat
+src/__pycache__/

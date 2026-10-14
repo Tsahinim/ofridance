@@ -1,0 +1,173 @@
+<!--title: הבמה הווירטואלית · OFRIDANCE-->
+<!--desc: עורך עימוד בעברית: גוררים רקדניות על במה, שומרים מערך לכל שמינייה על ציר זמן, מנגנים עם ספירה, רואים בתלת-ממד ומשתפים בקישור.-->
+<!--theme: dark-->
+<!--active: studio-->
+<!--head: <link rel="stylesheet" href="assets/css/tools.css">\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>-->
+<!--scripts: <script type="module" src="assets/js/stage.js"></script>-->
+
+<main id="main">
+  <section class="page-hero" aria-labelledby="t">
+    <h1 id="t" class="monument" data-rise>הבמה</h1>
+    <div class="under">
+      <p class="lead" data-rise style="--i:1">עימוד הוא ההחלטה מי עומדת איפה בכל רגע. כאן בונים אותו על ציר זמן של ספירות, ורואים את המעברים לפני שמסבירים אותם לקבוצה.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-label="עורך העימוד" style="padding-top:2.5rem">
+    <div id="stage-app" class="stage-app">
+      <div class="stage-main">
+        <div class="stage-host">
+          <div class="hud"><span class="big-count" aria-live="off">·</span><span class="eight">שמינייה 1</span></div>
+          <div class="stage-3d"></div>
+        </div>
+        <div class="transport">
+          <button id="play" class="button" type="button" aria-pressed="false">נגן</button>
+          <button id="rewind" class="chip" type="button">להתחלה</button>
+          <label class="bpm-plain">קצב <input id="bpm" type="range" min="60" max="160" step="1" value="100" aria-describedby="bpm-out"> <output id="bpm-out">100</output></label>
+          <label><input id="click" type="checkbox" checked> קליק</label>
+          <label><input id="voice" type="checkbox"> ספירה בקול</label>
+          <label><input id="paths" type="checkbox" checked> מסלולים</label>
+          <label><input id="flip" type="checkbox"> מבט הרקדניות</label>
+          <span class="spacer"></span>
+          <button id="view3d" class="chip" type="button" aria-pressed="false">מבט תלת-ממד</button>
+        </div>
+        <div class="song-strip" hidden>
+          <div class="song-head"><b class="song-name"></b><span>הקווים האדומים הם המערכים על השיר. לחיצה על השיר מזיזה את הנגינה לשם.</span></div>
+          <canvas aria-label="גל הקול של השיר, עם סימון השמיניות והמערכים"></canvas>
+        </div>
+        <div class="timeline" aria-label="ציר הזמן: מערך לכל קטע ספירות"></div>
+      </div>
+      <aside class="panel" aria-label="הגדרות">
+        <div class="music">
+          <h2>המוזיקה</h2>
+          <div class="actions" style="margin-top:10px">
+            <label class="chip file-chip">העלאת שיר<input id="song-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" class="sr-only"></label>
+            <button id="yt-btn" class="chip" type="button">קישור מיוטיוב</button>
+            <button id="demo-song" class="chip" type="button">שיר לדוגמה</button>
+            <button id="music-clear" class="chip" type="button" hidden>בלי מוזיקה</button>
+          </div>
+          <div class="yt-form" hidden style="display:grid;gap:6px;margin-top:8px">
+            <label class="sr-only" for="yt-url">קישור לסרטון ביוטיוב</label>
+            <input id="yt-url" type="url" inputmode="url" placeholder="הדביקו כאן קישור ליוטיוב" dir="ltr">
+            <button id="yt-load" class="chip" type="button">לטעון את הסרטון</button>
+          </div>
+          <p class="music-status small" role="status" style="color:#bbb;margin-top:8px">אפשר להעלות שיר מהמחשב או מהטלפון: האתר ימצא לבד את הקצב ואת ה"אחת". ספוטיפיי לא מאפשר לאתרים לנגן ולסנכרן שירים.</p>
+          <div class="yt-host" hidden></div>
+          <div class="music-fields" hidden style="display:grid;gap:8px;margin-top:10px">
+            <div class="row">
+              <label>קצב, פעמות לדקה <input id="m-bpm" type="number" step="0.1" min="40" max="240"></label>
+              <button id="tap" class="chip" type="button" style="align-self:end">הקישו בקצב</button>
+            </div>
+            <div class="actions"><button class="chip" type="button" data-tempo="2">קצב כפול</button><button class="chip" type="button" data-tempo="0.5">חצי קצב</button></div>
+            <div>
+              <p class="small" style="color:#bbb">ה"אחת" של הקטע בשיר: <output id="m-offset">0</output> שניות</p>
+              <div class="actions" style="margin-top:6px">
+                <button class="chip" type="button" data-nudge="-8">שמינייה מוקדם</button>
+                <button class="chip" type="button" data-nudge="-0.5">חצי ספירה מוקדם</button>
+                <button class="chip" type="button" data-nudge="0.5">חצי ספירה מאוחר</button>
+                <button class="chip" type="button" data-nudge="8">שמינייה מאוחר</button>
+                <button id="one-here" class="chip" type="button">האחת כאן</button>
+              </div>
+            </div>
+            <div class="row sk-row" style="align-items:end">
+              <label>סגנון השלד <select id="sk-style" style="min-height:2.75rem;background:#232323;border:0;color:#fff;padding:0 .5rem"><option value="hiphop">היפ הופ: חד ומהיר</option><option value="modern">מודרני: פתוח וזורם</option></select></label>
+              <button id="skeleton" class="button" type="button">לבנות שלד לפי השיר</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h2>המערך <small class="sel-label"></small></h2>
+          <div style="display:grid;gap:8px;margin-top:10px">
+            <label>שם המערך <input id="f-name" type="text" maxlength="24"></label>
+            <div class="row">
+              <label>אורך בספירות <input id="f-counts" type="number" min="1" max="64" step="1"></label>
+              <label>ספירות למעבר <input id="f-move" type="number" min="0" max="64" step="1"></label>
+            </div>
+            <label style="display:flex;align-items:center;gap:.5rem;color:#fff"><input id="snap" type="checkbox" checked> הצמדה לסימוני הבמה</label>
+            <div class="actions"><button id="add-f" class="chip" type="button">מערך חדש אחרי זה</button><button id="del-f" class="chip" type="button">מחיקת המערך</button><button id="undo" class="chip" type="button">ביטול פעולה</button></div>
+          </div>
+        </div>
+        <div>
+          <h2>תבניות</h2>
+          <div class="presets" style="margin-top:10px"></div>
+        </div>
+        <div>
+          <h2>הרקדניות <small class="cast-count"></small></h2>
+          <ul class="cast" style="margin-top:10px"></ul>
+          <button id="add-d" class="chip" type="button" style="margin-top:8px">הוספת רקדנית</button>
+        </div>
+        <div>
+          <h2>לשמור ולשתף</h2>
+          <div class="actions" style="margin-top:10px"><button id="share" class="chip" type="button">העתקת קישור</button><button id="png" class="chip" type="button">תמונה של המערך</button><button id="print" class="chip" type="button">הדפסת דף עימוד</button><button id="reset" class="chip" type="button">קטע חדש</button></div>
+          <p class="small" style="color:#aaa;margin-top:8px">הקטע נשמר אוטומטית בדפדפן הזה.</p>
+        </div>
+      </aside>
+    </div>
+    <noscript><p class="wrap">הבמה צריכה JavaScript כדי לעבוד.</p></noscript>
+    <div class="flash" role="status" aria-live="polite"></div>
+  </section>
+
+  <section id="how" class="chapter wrap" aria-labelledby="how-h">
+    <header><h2 id="how-h">איך משתמשים</h2><figure><img src="assets/img/hh-blue-stage.webp" width="1600" height="1067" alt="רקדנית על במה מוארת בכחול" loading="lazy"></figure></header>
+    <div class="body">
+      <p><strong>כל מלבן בציר הזמן הוא מערך.</strong> לוחצים על מלבן, ואז גוררים את הרקדניות למקום שבו הן צריכות להיות בסוף אותו קטע. המספר "אורך בספירות" קובע כמה זמן המערך נמשך, ו"ספירות למעבר" קובע בכמה ספירות מתוכו הרקדניות הולכות אליו מהמערך הקודם.</p>
+      <p>מעבר של 8 ספירות הוא הליכה רגועה. מעבר של 2 ספירות הוא ריצה. מעבר של 0 הוא קפיצת מקום, כמו אחרי חושך על הבמה.</p>
+      <h3>עם שיר</h3>
+      <p>לוחצים על "העלאת שיר" ובוחרים קובץ שמע מהמחשב או מהטלפון. האתר מנתח את השיר בתוך הדפדפן: מוצא את הקצב, את ה"אחת" הראשונה, ואיפה השיר שקט ואיפה הוא בשיא. מעל ציר הזמן מופיע גל הקול של השיר, והקווים האדומים מראים איפה כל מערך מתחיל. השיר נשמר בדפדפן הזה בלבד ולא נשלח לשום מקום.</p>
+      <p>"לבנות שלד לפי השיר" יוצר מערך לכל חלק בשיר. בסגנון היפ הופ השלד חד ומהיר, עם מעברים של שתיים עד ארבע ספירות. בסגנון מודרני הוא פתוח וזורם, עם מעברים ארוכים. זו רק נקודת התחלה: את המיקומים, הרמות והתנועות מחליטה הכוריאוגרפית.</p>
+      <p>אם הספירה לא יושבת על השיר, מתקנים: "קצב כפול" או "חצי קצב" כשהספירה מהירה או איטית פי שניים, "חצי ספירה" ו"שמינייה" כדי להזיז את ה"אחת", או "האחת כאן" בזמן נגינה. במוזיקה בלי פעמה ברורה, כמו הרבה מוזיקה למחול מודרני, קובעים את הקצב בהקשה.</p>
+      <p>אפשר גם להדביק קישור ליוטיוב. במקרה כזה יוטיוב לא מאפשר לאתר לשמוע את השיר, ולכן את הקצב קובעים בהקשה. ספוטיפיי לא מאפשר לאתרים לנגן ולסנכרן שירים בכלל.</p>
+      <h3>קיצורים</h3>
+      <ul>
+        <li>רווח: נגן ועצור.</li>
+        <li>חיצים: הזזת הרקדנית שנבחרה. עם Shift הצעד גדול יותר.</li>
+        <li><bdi>Ctrl+Z</bdi>: ביטול הפעולה האחרונה.</li>
+      </ul>
+      <h3>תבניות</h3>
+      <p>הכפתורים תחת "תבניות" מסדרים את כל הרקדניות במערך הנבחר בבת אחת: שורה, וי, מעגל, אלכסון ועוד. אחרי זה מזיזים ביד את מי שצריך. זו הדרך המהירה להגיע לטיוטה.</p>
+      <h3>מבט הרקדניות</h3>
+      <p>הבמה מצוירת כמו שהקהל רואה אותה. כשמסבירים עימוד לקבוצה שעומדת מול מראה, נוח להפוך את המבט: הסימון "מבט הרקדניות" מסובב את הבמה כך שהיא נראית כמו מהבמה עצמה.</p>
+      <div class="tip"><strong>טיפ לחזרות</strong>הדפיסו "דף עימוד" ותלו אותו בסטודיו. כל מערך מופיע בו עם מספרי הספירות שלו ועם המסלולים מהמערך הקודם.</div>
+    </div>
+  </section>
+
+  <section id="map" class="split wrap field-paper" aria-labelledby="map-h">
+    <figure class="pic"><img src="assets/img/st-empty.webp" width="1600" height="1200" alt="במה ריקה מוארת באורות סגולים ולבנים" loading="lazy"><figcaption>במה ריקה היא דף לבן. העימוד הוא הכתב.</figcaption></figure>
+    <div class="words">
+      <h2 id="map-h">מפת הבמה</h2>
+      <p>כוריאוגרפים מחלקים את הבמה לתשעה אזורים: שלוש רצועות עומק כפול שלושה צדדים. כדאי להכיר את השמות, כי ככה מדברים בחזרות.</p>
+      <h3>עומק</h3>
+      <p><strong>קדמת הבמה</strong> היא הקרובה לקהל. <strong>עומק הבמה</strong> הוא הרחוק. באנגלית <bdi lang="en">downstage</bdi> ו-<bdi lang="en">upstage</bdi>, מהתקופה שבה הבמות היו משופעות ובאמת ירדו לכיוון הקהל.</p>
+      <h3>צדדים</h3>
+      <p><strong>ימין הבמה</strong> הוא הימין של הרקדנית כשהיא עומדת מול הקהל. מהקהל רואים אותו בצד שמאל. זה מבלבל בהתחלה, ולכן הבמה בעורך כתובה בשמות האלה.</p>
+      <h3>סימוני הרצפה</h3>
+      <p>בבמות ובסטודיו מדביקים פסי סימון על קדמת הבמה: אחד באמצע, ועוד כמה במרחקים שווים לכל צד. כל רקדנית יודעת "אני על שתיים מימין" ומוצאת את המקום גם בחושך. הנקודות על הבמה בעורך הן אותם סימונים.</p>
+    </div>
+  </section>
+
+  <section id="craft" class="chapter wrap" aria-labelledby="craft-h">
+    <header><h2 id="craft-h">מה הופך עימוד לטוב</h2><figure><img src="assets/img/st-sil.webp" width="1600" height="975" alt="צלליות של רקדנים על במה מוארת בסגול" loading="lazy"></figure></header>
+    <div class="body">
+      <h3>חלונות</h3>
+      <p>אם רקדנית עומדת בדיוק מאחורי רקדנית אחרת, הקהל לא רואה אותה. בשתי שורות מזיזים את השורה האחורית חצי צעד, כך שכל אחת עומדת ב"חלון" בין שתיים שלפניה. התבנית "חלונות" עושה את זה אוטומטית.</p>
+      <h3>מוקד</h3>
+      <p>העין של הקהל הולכת לנקודה הכי קדמית, הכי מרכזית, או זו שזזה כשכולן קפואות. מחליטים מראש מי המוקד בכל שמינייה, ומעמידים את השאר כך שיפנו אליה את הדרך.</p>
+      <h3>מעברים נקיים</h3>
+      <p>מסלול טוב קצר, ולא חוצה מסלול של רקדנית אחרת באותו רגע. הפעילו את "מסלולים" והסתכלו: אם שני קווים נחתכים באמצע, אחת מהן תצטרך לעצור או לעקוף.</p>
+      <h3>שינוי מספר הרקדניות על הבמה</h3>
+      <p>לא כל הקבוצה חייבת לרקוד כל הזמן. סולו מול קבוצה קפואה, דואט בקדמת הבמה, או כניסה של רקדניות מהצדדים בשמינייה מסוימת, מוסיפים לקטע נשימה ומבנה.</p>
+      <h3>רמות</h3>
+      <p>העורך מצייר את הבמה מלמעלה, אבל במציאות יש גם גובה: עמידה, ירידה לברך, ישיבה ושכיבה. רשמו את הרמה בשם המערך, למשל "וי, שורה קדמית למטה".</p>
+      <p><a class="link" href="create.html#formations">עוד על מערכים בפרק "איך יוצרים קטע"</a></p>
+    </div>
+  </section>
+
+  <section aria-label="תמונות">
+    <div class="band" data-stagger>
+      <a href="create.html#formations"><img src="assets/img/st-orange-group.webp" width="1600" height="1067" alt="קבוצת רקדניות בצלליות על רקע כתום" loading="lazy"><span class="panel-title">מערכים אמיתיים</span></a><a href="hiphop.html#crew" aria-label="רקדנית בכובע אדום מול קבוצה"><img src="assets/img/hh-crew-pose.webp" width="1600" height="2042" alt="רקדנית בכובע אדום מול קבוצה" loading="lazy"></a><a href="modern.html#group" aria-label="רקדניות במערך על במה חשוכה"><img src="assets/img/st-stars.webp" width="1600" height="1067" alt="רקדניות במערך על במה חשוכה" loading="lazy"></a><a href="hiphop.html#crew" aria-label="קבוצת רקדניות ברחוב"><img src="assets/img/hh-crew-street.webp" width="1600" height="2400" alt="קבוצת רקדניות ברחוב" loading="lazy"></a>
+    </div>
+    <p class="band-caption">כל תמונה קבוצתית התחילה מהחלטה: מי עומדת איפה.</p>
+  </section>
+
+</main>
+<div class="print-sheet" aria-hidden="true"></div>
