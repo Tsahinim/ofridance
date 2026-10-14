@@ -6,7 +6,7 @@ SRC = ROOT / 'src'
 mark = (ROOT / 'brand' / 'ofridance-wordmark.svg').read_text(encoding='utf-8')
 mark = re.sub(r'<title>.*?</title>', '', mark).replace('<svg ', '<svg aria-hidden="true" focusable="false" ', 1)
 NAV = [('what.html', 'what', 'מהי כוריאוגרפיה'), ('hiphop.html', 'hiphop', 'היפ הופ'), ('modern.html', 'modern', 'מודרני'),
-       ('create.html', 'create', 'איך יוצרים'), ('watch.html', 'watch', 'לצפות'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('pro.html', 'pro', 'למתקדמות'), ('glossary.html', 'glossary', 'מילון')]
+       ('create.html', 'create', 'איך יוצרים'), ('formation.html', 'formation', 'עימוד'), ('watch.html', 'watch', 'לצפות'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('pro.html', 'pro', 'למתקדמות'), ('glossary.html', 'glossary', 'מילון')]
 HEAD = '''<!doctype html>
 <html lang="he" dir="rtl"{theme}>
 <head>
@@ -22,7 +22,7 @@ HEAD = '''<!doctype html>
 <link rel="stylesheet" href="assets/css/site.css">
 {extra_head}<script>document.documentElement.classList.add('js')</script>
 </head>
-<body>
+<body{body_class}>
 <a class="skip" href="#main">דילוג לתוכן</a>
 '''
 def topbar(active):
@@ -56,7 +56,7 @@ def build():
         meta = dict(re.findall(r'<!--(\w+):\s*(.*?)-->', raw.split('\n\n', 1)[0]))
         body = re.sub(r'^(<!--\w+:.*?-->\s*)+', '', raw).replace('{{MARK}}', mark)
         theme = meta.get('theme', 'light')
-        html = HEAD.format(title=meta.get('title', 'OFRIDANCE'), desc=meta.get('desc', ''), theme=' data-theme="dark"' if theme == 'dark' else '',
+        html = HEAD.format(body_class=(' class="' + meta['body'] + '"') if meta.get('body') else '', title=meta.get('title', 'OFRIDANCE'), desc=meta.get('desc', ''), theme=' data-theme="dark"' if theme == 'dark' else '',
                            tc='#000000' if theme == 'dark' else '#ffffff', extra_head=meta.get('head', '').replace(chr(92) + 'n', chr(10)) +('\n' if meta.get('head') else ''))
         if meta.get('bar', 'yes') != 'no': html += topbar(meta.get('active', ''))
         body = body.replace('<div class="body">', '<div class="body" data-stagger>').replace('<div class="words">', '<div class="words" data-stagger>')

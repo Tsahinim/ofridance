@@ -1,0 +1,71 @@
+/* OFRIDANCE — the formation app: a full-screen workspace, like a video editor.
+   Top bar, the stage in the middle, a panel on the side, the timeline docked at the bottom. */
+.app-body { background: #0b0b0b; }
+.fx { min-height: 100dvh; }
+.fx-app.stage-app { display: grid; grid-template-columns: none; grid-template-rows: auto minmax(0, 1fr) auto; height: 100dvh; padding: 0; gap: 0; background: #0b0b0b; }
+
+/* ---- top bar */
+.fx-bar { display: flex; align-items: center; gap: 1rem; padding: 0.5rem 0.75rem; background: #111; min-height: 3.5rem; }
+.fx-home { width: 8.5rem; color: #fff; flex: none; display: block; }
+.fx-home svg { width: 100%; height: auto; display: block; }
+.fx-title { font-size: 1.125rem; font-weight: 600; padding-inline-start: 0.25rem; color: #ff6a5c; }
+.fx-tools { display: flex; flex-wrap: wrap; gap: 4px; margin-inline-start: auto; }
+.fx-btn { font: inherit; font-size: 0.9375rem; color: #eee; background: #1d1d1d; border: 0; min-height: 2.5rem; padding: 0 0.85rem; cursor: pointer; display: inline-flex; align-items: center; text-decoration: none; }
+.fx-btn:hover { background: #2a2a2a; }
+.fx-btn[aria-pressed="true"] { background: #fff; color: #000; }
+.fx-btn.fx-primary { background: var(--red); color: #fff; }
+.fx-btn.fx-primary:hover { background: var(--red-deep); }
+
+/* ---- work area */
+.fx-work { display: grid; grid-template-columns: minmax(0, 1fr) 21rem; min-height: 0; }
+.fx .stage-main.fx-stage { display: block; min-height: 0; padding: 8px; }
+.fx .stage-host { height: 100%; display: grid; place-items: center; background: #151515; overflow: hidden; }
+.fx .stage-host .stage-svg { width: 100%; height: 100%; max-height: 100%; }
+.fx .stage-host .stage-3d { position: absolute; inset: 0; aspect-ratio: auto; }
+.fx-panel.panel { overflow: auto; padding: 0 0 1rem; gap: 0; align-content: start; background: #111; }
+.fx-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); background: #181818; }
+.fx-tabs button { font: inherit; font-size: 1rem; font-weight: 600; color: #999; background: none; border: 0; min-height: 3rem; cursor: pointer; border-bottom: 3px solid transparent; }
+.fx-tabs button[aria-selected="true"] { color: #fff; border-bottom-color: var(--red); }
+.fx-pane { display: grid; gap: 0.75rem; padding: 1rem 1rem 0; align-content: start; }
+.fx-pane h2 { font-size: 1.0625rem; margin-top: 0.5rem; }
+.fx-hint { font-size: 0.875rem; color: #9a9a9a; line-height: 1.45; }
+.fx-check { display: flex !important; align-items: center; gap: 0.5rem; color: #fff !important; }
+.fx-pane select { min-height: 2.75rem; background: #232323; border: 0; color: #fff; padding: 0 0.5rem; }
+.fx-pane .yt-form, .fx-pane .music-fields { display: grid; gap: 8px; }
+.fx .presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.fx .presets .chip { min-height: 2.75rem; padding: 0 0.4rem; justify-content: center; }
+.fx .cast { max-height: none; }
+
+/* ---- coach marks for the first visit */
+.fx-coach { position: absolute; top: 12px; inset-inline-start: 12px; z-index: 4; background: #fff; color: #0a0a0a; padding: 1rem 1.1rem; max-width: 19rem; display: grid; gap: 0.5rem; font-size: 0.9375rem; }
+.fx-coach ol { padding-inline-start: 1.2em; display: grid; gap: 0.3rem; }
+.fx-coach .fx-btn { justify-self: start; }
+
+/* ---- the dock: transport and timeline */
+.fx-dock { background: #111; padding: 6px 8px 8px; display: grid; gap: 6px; }
+.fx .fx-transport { background: none; padding: 0; }
+.fx .transport .button { min-height: 2.75rem; min-width: 6rem; }
+.fx .ruler { margin: 0; }
+.fx .timeline { background: #0b0b0b; padding: 6px; min-height: 6.5rem; scroll-snap-type: x proximity; }
+.fx .timeline .block { min-width: 8rem; padding: 0.4rem 0.5rem 0.5rem; grid-template-rows: auto auto auto; scroll-snap-align: start; border: 0; cursor: pointer; font: inherit; }
+.fx .timeline .bthumb { width: 100%; height: auto; aspect-ratio: 10 / 6; display: block; background: #161616; }
+.fx .timeline .block[aria-pressed="true"] .bthumb { background: #a5221a; }
+.fx .timeline .block.add { flex: 0 0 4.5rem; min-width: 4.5rem; display: grid; place-items: center; font-size: 2rem; font-weight: 400; background: #1d1d1d; color: #fff; }
+.fx .timeline .block.add:hover { background: var(--red); }
+
+@media (max-width: 62em) {
+  .fx-app.stage-app { height: auto; min-height: 100dvh; grid-template-rows: auto auto auto; }
+  .fx-work { display: contents; }
+  .fx .stage-main.fx-stage { order: 1; height: auto; position: sticky; top: 0; z-index: 5; background: #0b0b0b; }
+  .fx .stage-host { aspect-ratio: 1000 / 600; height: auto; }
+  .fx-dock { order: 2; }
+  .fx-panel.panel { order: 3; border: 0; overflow: visible; }
+  .fx-bar { flex-wrap: wrap; }
+  .fx-home { width: 7rem; }
+  .fx .transport label:has(#voice), .fx .transport label:has(#flip) { display: none; }
+}
+@media (max-width: 40em) {
+  .fx-title { display: none; }
+  .fx-tools .fx-btn { padding: 0 0.6rem; font-size: 0.875rem; }
+}
+.fx .ruler { display: none; }

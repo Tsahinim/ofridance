@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>הבמה הווירטואלית · OFRIDANCE</title>
-<meta name="description" content="עורך עימוד בעברית: גוררים רקדניות על במה, שומרים מערך לכל שמינייה על ציר זמן, מנגנים עם ספירה, רואים בתלת-ממד ומשתפים בקישור.">
+<title>מדריך העימוד · OFRIDANCE</title>
+<meta name="description" content="איך מתכננים עימוד: מפת הבמה, חלונות, מוקד ומעברים נקיים, והמדריך לאפליקציית העימוד של OFRIDANCE.">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=1792002658">
-<link rel="stylesheet" href="assets/css/tools.css?v=1792002658">
+<link rel="stylesheet" href="assets/css/site.css?v=1792005981">
+<link rel="stylesheet" href="assets/css/tools.css?v=1792005981">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script>document.documentElement.classList.add('js')</script>
 </head>
@@ -32,6 +32,7 @@
     <a href="hiphop.html">היפ הופ</a>
     <a href="modern.html">מודרני</a>
     <a href="create.html">איך יוצרים</a>
+    <a href="formation.html" aria-current="page">עימוד</a>
     <a href="watch.html">לצפות</a>
     <a href="path.html">מסלול <bdi dir="ltr">12+</bdi></a>
     <a href="pro.html">למתקדמות</a>
@@ -48,109 +49,11 @@
     </div>
   </section>
 
-  <section class="section" aria-label="עורך העימוד" style="padding-top:2.5rem">
-    <div id="stage-app" class="stage-app">
-      <div class="stage-main">
-        <div class="stage-host">
-          <div class="hud"><span class="big-count" aria-live="off">·</span><span class="eight">שמינייה 1</span></div>
-          <div class="stage-3d"></div>
-        </div>
-        <div class="transport">
-          <button id="play" class="button" type="button" aria-pressed="false">נגן</button>
-          <button id="rewind" class="chip" type="button">להתחלה</button>
-          <label class="bpm-plain">קצב <input id="bpm" type="range" min="60" max="160" step="1" value="100" aria-describedby="bpm-out"> <output id="bpm-out">100</output></label>
-          <label><input id="click" type="checkbox" checked> קליק</label>
-          <label><input id="voice" type="checkbox"> ספירה בקול</label>
-          <label><input id="paths" type="checkbox" checked> מסלולים</label>
-          <label><input id="flip" type="checkbox"> מבט הרקדניות</label>
-          <span class="spacer"></span>
-          <button id="view3d" class="chip" type="button" aria-pressed="false">מבט תלת-ממד</button>
-        </div>
-        <div class="song-strip" hidden>
-          <div class="song-head"><b class="song-name"></b><span>הקווים האדומים הם המערכים על השיר. לחיצה על השיר מזיזה את הנגינה לשם.</span></div>
-          <canvas aria-label="גל הקול של השיר, עם סימון השמיניות והמערכים"></canvas>
-        </div>
-        <div class="ruler" aria-hidden="true"></div>
-        <div class="timeline" aria-label="ציר הזמן: מערך לכל קטע ספירות"></div>
-      </div>
-      <aside class="panel" aria-label="הגדרות">
-        <div class="music">
-          <h2>המוזיקה</h2>
-          <div class="actions" style="margin-top:10px">
-            <label class="chip file-chip">העלאת שיר<input id="song-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" class="sr-only"></label>
-            <button id="yt-btn" class="chip" type="button">קישור מיוטיוב</button>
-            <button id="demo-song" class="chip" type="button">שיר לדוגמה</button>
-            <button id="music-clear" class="chip" type="button" hidden>בלי מוזיקה</button>
-          </div>
-          <div class="yt-form" hidden style="display:grid;gap:6px;margin-top:8px">
-            <label class="sr-only" for="yt-url">קישור לסרטון ביוטיוב</label>
-            <input id="yt-url" type="url" inputmode="url" placeholder="הדביקו כאן קישור ליוטיוב" dir="ltr">
-            <button id="yt-load" class="chip" type="button">לטעון את הסרטון</button>
-          </div>
-          <p class="music-status small" role="status" style="color:#bbb;margin-top:8px">אפשר להעלות שיר מהמחשב או מהטלפון: האתר ימצא לבד את הקצב ואת ה"אחת". ספוטיפיי לא מאפשר לאתרים לנגן ולסנכרן שירים.</p>
-          <div class="yt-host" hidden></div>
-          <div class="music-fields" hidden style="display:grid;gap:8px;margin-top:10px">
-            <div class="row">
-              <label>קצב, פעמות לדקה <input id="m-bpm" type="number" step="0.1" min="40" max="240"></label>
-              <button id="tap" class="chip" type="button" style="align-self:end">הקישו בקצב</button>
-            </div>
-            <div class="actions"><button class="chip" type="button" data-tempo="2">קצב כפול</button><button class="chip" type="button" data-tempo="0.5">חצי קצב</button></div>
-            <div>
-              <p class="small" style="color:#bbb">ה"אחת" של הקטע בשיר: <output id="m-offset">0</output> שניות</p>
-              <div class="actions" style="margin-top:6px">
-                <button class="chip" type="button" data-nudge="-8">שמינייה מוקדם</button>
-                <button class="chip" type="button" data-nudge="-0.5">חצי ספירה מוקדם</button>
-                <button class="chip" type="button" data-nudge="0.5">חצי ספירה מאוחר</button>
-                <button class="chip" type="button" data-nudge="8">שמינייה מאוחר</button>
-                <button id="one-here" class="chip" type="button">האחת כאן</button>
-              </div>
-            </div>
-            <div class="row sk-row" style="align-items:end">
-              <label>סגנון השלד <select id="sk-style" style="min-height:2.75rem;background:#232323;border:0;color:#fff;padding:0 .5rem"><option value="hiphop">היפ הופ: חד ומהיר</option><option value="modern">מודרני: פתוח וזורם</option></select></label>
-              <button id="skeleton" class="button" type="button">לבנות שלד לפי השיר</button>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h2>המערך <small class="sel-label"></small></h2>
-          <div style="display:grid;gap:8px;margin-top:10px">
-            <label>שם המערך <input id="f-name" type="text" maxlength="24"></label>
-            <div class="row">
-              <label>אורך בספירות <input id="f-counts" type="number" min="1" max="64" step="1"></label>
-              <label>ספירות למעבר <input id="f-move" type="number" min="0" max="64" step="1"></label>
-            </div>
-            <label style="display:flex;align-items:center;gap:.5rem;color:#fff"><input id="snap" type="checkbox" checked> הצמדה לסימוני הבמה</label>
-            <div class="actions"><button id="add-f" class="chip" type="button">מערך חדש אחרי זה</button><button id="del-f" class="chip" type="button">מחיקת המערך</button><button id="undo" class="chip" type="button">ביטול פעולה</button></div>
-          </div>
-        </div>
-        <div>
-          <h2>תבניות</h2>
-          <div class="presets" style="margin-top:10px"></div>
-        </div>
-        <div>
-          <h2>הרקדניות <small class="cast-count"></small></h2>
-          <ul class="cast" style="margin-top:10px"></ul>
-          <button id="add-d" class="chip" type="button" style="margin-top:8px">הוספת רקדנית</button>
-          <div style="margin-top:12px">
-            <p class="small" style="color:#bbb">כיוון הפנים של הרקדנית שנבחרה. אפשר גם לגרור את העיגול הלבן שליד הרקדנית.</p>
-            <div class="actions" style="margin-top:6px">
-              <button class="chip" type="button" data-face="0">לקהל</button>
-              <button class="chip" type="button" data-face="90">לימין הבמה</button>
-              <button class="chip" type="button" data-face="270">לשמאל הבמה</button>
-              <button class="chip" type="button" data-face="180">גב לקהל</button>
-              <button class="chip" type="button" data-face="all">כולן לקהל</button>
-            </div>
-          </div>
-        </div>
-        <div>
-          <h2>לשמור ולשתף</h2>
-          <div class="actions" style="margin-top:10px"><button id="share" class="chip" type="button">העתקת קישור</button><button id="png" class="chip" type="button">תמונה של המערך</button><button id="print" class="chip" type="button">הדפסת דף עימוד</button><button id="reset" class="chip" type="button">קטע חדש</button></div>
-          <p class="small" style="color:#aaa;margin-top:8px">הקטע נשמר אוטומטית בדפדפן הזה.</p>
-        </div>
-      </aside>
-    </div>
-    <noscript><p class="wrap">הבמה צריכה JavaScript כדי לעבוד.</p></noscript>
-    <div class="flash" role="status" aria-live="polite"></div>
+  <section class="section wrap" aria-labelledby="app-h">
+    <a class="app-promo" href="formation.html">
+      <img src="assets/img/app-formation.webp" width="1440" height="900" alt="אפליקציית העימוד: במה עם שש רקדניות במערך וי, וציר זמן של מערכים בתחתית" loading="eager">
+      <span class="app-promo-txt"><span id="app-h" class="app-promo-h">אפליקציית העימוד</span><span>מסך עבודה מלא: במה, ציר זמן של מערכים ומוזיקה. נשמר אוטומטית, בלי הרשמה.</span><span class="button">לפתוח את האפליקציה</span></span>
+    </a>
   </section>
 
   <section id="how" class="chapter wrap" aria-labelledby="how-h">
@@ -216,7 +119,6 @@
   </section>
 
 </main>
-<div class="print-sheet" aria-hidden="true"></div>
 <footer class="site-footer">
   <div class="cols">
     <ul><li>ללמוד</li><li><a href="what.html">מהי כוריאוגרפיה</a></li><li><a href="hiphop.html">היפ הופ</a></li><li><a href="modern.html">מחול מודרני</a></li><li><a href="create.html">איך יוצרים קטע</a></li></ul>
@@ -238,7 +140,7 @@
     <p class="legal"><span>OFRIDANCE · כוריאוגרפיה בהיפ הופ ובמחול מודרני, מגיל 12</span><span>צילומים: Unsplash וארכיונים פתוחים, <a href="credits.html">רשימת קרדיטים</a></span></p>
   </div>
 </footer>
-<script src="assets/js/site.js?v=1792002658" defer></script>
-<script type="module" src="assets/js/stage.js?v=1792002658"></script>
+<script src="assets/js/site.js?v=1792005981" defer></script>
+
 </body>
 </html>

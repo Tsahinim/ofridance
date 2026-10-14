@@ -301,16 +301,34 @@ function full(app) {
     state.formations.forEach((f, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'block'; b.style.flexGrow = f.counts;
       b.setAttribute('aria-pressed', i === sel);
-      b.innerHTML = `<span class="bn">${escapeHtml(f.name)}</span><span class="bc">${f.counts} ספירות · מעבר ${f.move}</span>`;
+      // a tiny top view of the formation, so the timeline reads like a storyboard
+      const dots = state.dancers.map((d) => { const q = f.pos[d.id]; return q ? `<circle cx="${(q[0] * 100).toFixed(1)}" cy="${(q[1] * 60).toFixed(1)}" r="4.2" fill="${d.color}"/>` : ''; }).join('');
+      b.innerHTML = `<svg class="bthumb" viewBox="-6 -6 112 72" aria-hidden="true">${dots}</svg><span class="bn">${escapeHtml(f.name)}</span><span class="bc">${f.counts} ספירות · מעבר ${f.move}</span>`;
       b.addEventListener('click', () => { const was = playing; stop(); sel = i; t = was ? startOf(i) : startOf(i) + f.counts - 0.001; renderAll(); if (was) play(); });
       tl.appendChild(b);
     });
+    const add = document.createElement('button'); add.type = 'button'; add.className = 'block add'; add.textContent = '+'; add.setAttribute('aria-label', 'מערך חדש בסוף');
+    add.addEventListener('click', () => { stop(); snapshot(); const last = state.formations[state.formations.length - 1]; state.formations.push({ name: `מערך ${state.formations.length + 1}`, counts: 8, move: 4, pos: JSON.parse(JSON.stringify(last.pos)) }); sel = state.formations.length - 1; t = startOf(sel) + 7.999; renderAll(); save(); tl.scrollTo({ left: -tl.scrollWidth, behavior: 'smooth' }); flash('מערך חדש. גררו את הרקדניות למקום החדש.'); });
+    tl.appendChild(add);
     const ph = document.createElement('span'); ph.className = 'playhead'; tl.appendChild(ph);
     // a ruler of counts above the timeline, every eight numbered
     const ru = $('.ruler'); if (ru) { ru.innerHTML = ''; const T = total(state); for (let c = 0; c < T; c++) { if (T > 200 && c % 8) continue; const t2 = document.createElement('span'); if (c % 8 === 0) { t2.className = 'e'; t2.innerHTML = `<b>${c / 8 + 1}</b>`; } t2.style.insetInlineStart = `${(c / T) * 100}%`; ru.appendChild(t2); } }
     placeHead();
   }
-  function placeHead() { const ph = $('.timeline .playhead'); if (ph) ph.style.insetInlineStart = `${(clamp(t, 0, total(state)) / total(state)) * 100}%`; }
+  function placeHead() {
+    const ph = $('.timeline .playhead'); if (!ph) return;
+    // walk the blocks so the head sits inside the right one even when blocks have a minimum width (right to left)
+    const blocks = [...app.querySelectorAll('.timeline .block:not(.add)')]; const tt = clamp(t, 0, total(state)); let acc = 0;
+    for (let i = 0; i < blocks.length; i++) {
+      const f = state.formations[i]; if (!f) break;
+      if (tt <= acc + f.counts || i === blocks.length - 1) {
+        const bl = blocks[i], k = clamp((tt - acc) / f.counts, 0, 1);
+        ph.style.insetInlineStart = 'auto'; ph.style.left = `${bl.offsetLeft + bl.offsetWidth * (1 - k) - 1}px`;
+        return;
+      }
+      acc += f.counts;
+    }
+  }
   function renderForm() {
     const f = state.formations[sel];
     $('#f-name').value = f.name; $('#f-counts').value = f.counts; $('#f-move').value = f.move;
@@ -618,6 +636,20 @@ function full(app) {
       $('.stage-host').classList.add('is-3d'); b3.setAttribute('aria-pressed', 'true'); b3.textContent = 'חזרה למבט מלמעלה'; drawNow();
     } catch (e) { b3.textContent = 'מבט תלת-ממד'; flash('לא הצלחנו לטעון את התלת-ממד. בדקו חיבור לאינטרנט.'); }
   });
+
+  // the side panel of the app is split into tabs
+  app.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
+    app.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
+    app.querySelectorAll('[data-pane]').forEach((p) => { p.hidden = p.dataset.pane !== b.dataset.tab; });
+    drawStrip();
+  }));
+  // first visit: three lines on how to start
+  const coach = $('.fx-coach');
+  if (coach) {
+    let seen = false; try { seen = localStorage.getItem('ofridance-coach') === '1'; } catch (e) {}
+    coach.hidden = seen;
+    coach.querySelector('[data-coach-close]').addEventListener('click', () => { coach.hidden = true; try { localStorage.setItem('ofridance-coach', '1'); } catch (e) {} });
+  }
 
   t = startOf(sel) + state.formations[sel].counts - 0.001;
   renderAll();
