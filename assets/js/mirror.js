@@ -42,8 +42,12 @@ function drawTarget(svg, key) {
 async function init(app) {
   const $ = (q) => app.querySelector(q);
   const video = $('video'), canvas = $('canvas'), g = canvas.getContext('2d');
-  let landmarker = null, stream = null, running = false, mode = 'skeleton', target = 't', trails = [], best = 0, game = null;
+  let landmarker = null, stream = null, running = false, mode = 'pose', target = 't', trails = [], best = 0, game = null;
   const status = (t) => { $('.status').textContent = t; };
+  // a big line on the video that always says what to do next
+  let lastGuide = '', guideAt = 0;
+  const guide = (t) => { const now = performance.now(); if (t === lastGuide || now - guideAt < 350) return; lastGuide = t; guideAt = now; const el = $('.guide'); el.textContent = t; el.hidden = !t; };
+  const seen = (p, ids) => ids.every((i) => p[i] && p[i].visibility > 0.5 && p[i].y > 0 && p[i].y < 1);
 
   app.querySelectorAll('.pose-list .chip').forEach((b) => b.addEventListener('click', () => { target = b.dataset.pose; app.querySelectorAll('.pose-list .chip').forEach((c) => c.setAttribute('aria-pressed', c === b)); drawTarget($('.target'), target); $('.pose-hint').textContent = POSES[target].hint; best = 0; }));
   app.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { mode = b.dataset.mode; trails = []; app.querySelectorAll('[data-mode]').forEach((c) => c.setAttribute('aria-pressed', c === b)); $('.target').style.display = mode === 'pose' ? '' : 'none'; $('.score').style.display = mode === 'pose' ? '' : 'none'; }));
@@ -64,13 +68,13 @@ async function init(app) {
       status('מבקש גישה למצלמה…');
       stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } }, audio: false });
       video.srcObject = stream; await video.play();
-      running = true; $('.placeholder').hidden = true; $('#cam').textContent = 'כיבוי המצלמה'; status('המצלמה פועלת. עמדו כך שכל הגוף ייכנס לתמונה.');
+      running = true; $('.placeholder').hidden = true; $('#cam').textContent = 'כיבוי המצלמה'; status('המצלמה פועלת.'); guide('עמדו מול המצלמה, במרחק של שלושה צעדים.');
       loop();
     } catch (e) {
       status(e && e.name === 'NotAllowedError' ? 'לא ניתנה גישה למצלמה. אפשר לאשר אותה בהגדרות הדפדפן ולנסות שוב.' : 'לא הצלחנו להפעיל את המצלמה או לטעון את זיהוי התנועה. בדקו חיבור לאינטרנט ושיש מצלמה.');
     }
   });
-  function stop() { running = false; if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; video.srcObject = null; $('.placeholder').hidden = false; $('#cam').textContent = 'הפעלת המצלמה'; status('המצלמה כבויה.'); g.clearRect(0, 0, canvas.width, canvas.height); }
+  function stop() { running = false; if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; video.srcObject = null; $('.placeholder').hidden = false; $('#cam').textContent = 'הפעלת המצלמה'; status('המצלמה כבויה.'); g.clearRect(0, 0, canvas.width, canvas.height); lastGuide = ''; $('.guide').hidden = true; }
 
   $('#game').addEventListener('click', () => {
     if (!running) { status('הפעילו קודם את המצלמה.'); return; }
@@ -94,6 +98,14 @@ async function init(app) {
         const res = landmarker.detectForVideo(video, now);
         g.clearRect(0, 0, canvas.width, canvas.height);
         const p = res.landmarks && res.landmarks[0];
+        const full = p && seen(p, [11, 12, 23, 24, 25, 26, 27, 28]);
+        if (!p) guide('לא רואים אתכן. עמדו מול המצלמה, במרחק של שלושה צעדים.');
+        else if (!full) guide('התרחקו עוד קצת, או הרחיקו את המכשיר: צריך לראות את כל הגוף, עד הקרסוליים.');
+        else if (game) guide('');
+        else if (mode === 'pose') guide(`רואים את כל הגוף. עכשיו העתיקו את התנוחה שבפינה: ${POSES[target].hint} המספר הגדול הוא הציון.`);
+        else if (mode === 'trails') guide('הזיזו ידיים ורגליים: הידיים משאירות שובל אדום והרגליים שובל לבן.');
+        else guide('רואים את כל הגוף. בחרו משחק בצד: תנוחה וציון, קפאו על 8, או ציור באוויר.');
+        if (mode === 'pose' && !full && !game) { $('.score b').textContent = '·'; $('.score span').textContent = 'מחכים לכל הגוף'; }
         if (p) {
           const W = canvas.width, H = canvas.height; const pt = (i) => [p[i].x * W, p[i].y * H];
           if (mode === 'trails') {
@@ -105,7 +117,7 @@ async function init(app) {
           for (const [a, b] of BONES) { if (p[a].visibility < 0.4 || p[b].visibility < 0.4) continue; const [x1, y1] = pt(a), [x2, y2] = pt(b); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
           g.fillStyle = '#ffffff';
           for (const i of [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28]) { if (p[i].visibility < 0.4) continue; const [x, y] = pt(i); g.beginPath(); g.arc(x, y, Math.max(5, W / 110), 0, Math.PI * 2); g.fill(); }
-          if (mode === 'pose') {
+          if (mode === 'pose' && full) {
             const sc = score(measure(p), POSES[target]);
             if (!game) { $('.score b').textContent = sc; $('.score span').textContent = sc > 85 ? 'מדויק!' : sc > 65 ? 'כמעט' : 'עוד קצת'; }
             if (game && game.phase === 'hold') best = Math.max(best, sc);

@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=1792002469">
-<link rel="stylesheet" href="assets/css/tools.css?v=1792002469">
+<link rel="stylesheet" href="assets/css/site.css?v=1792002658">
+<link rel="stylesheet" href="assets/css/tools.css?v=1792002658">
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body>
@@ -56,15 +56,17 @@
         <div class="placeholder"><div><p style="font-size:1.375rem;font-weight:500">הניחו את המכשיר במרחק שלושה צעדים, כך שכל הגוף ייכנס לתמונה.</p><p class="small" style="color:#aaa;margin-top:.6rem">הזיהוי רץ בתוך הדפדפן. שום תמונה לא נשמרת ולא נשלחת.</p></div></div>
         <svg class="target" viewBox="0 0 100 130" aria-hidden="true"></svg>
         <div class="score"><b>·</b><span></span></div>
+        <p class="guide" hidden aria-live="polite"></p>
       </div>
       <aside class="mirror-side">
         <button id="cam" class="button" type="button">הפעלת המצלמה</button>
         <p class="status small" role="status" style="color:#bbb">המצלמה כבויה.</p>
         <div>
           <h2 style="font-size:1.25rem;font-weight:600">מצב</h2>
+          <p class="small" style="color:#bbb;margin-top:6px">"תנוחה וציון": מעתיקים את הדמות שבפינה ומקבלים ציון. "קפאו על 8": המראה סופרת, ועל 8 קופאים בתנוחה. "ציור באוויר": הגוף מצייר שובלים.</p>
           <div class="pose-list" style="margin-top:8px">
-            <button class="chip" type="button" data-mode="skeleton" aria-pressed="true">שלד</button>
-            <button class="chip" type="button" data-mode="pose" aria-pressed="false">תנוחה וציון</button>
+            <button class="chip" type="button" data-mode="skeleton" aria-pressed="false">רק שלד</button>
+            <button class="chip" type="button" data-mode="pose" aria-pressed="true">תנוחה וציון</button>
             <button class="chip" type="button" data-mode="trails" aria-pressed="false">ציור באוויר</button>
             <button id="game" class="chip" type="button">קפאו על 8</button>
           </div>
@@ -141,7 +143,7 @@
     <p class="legal"><span>OFRIDANCE · כוריאוגרפיה בהיפ הופ ובמחול מודרני, מגיל 12</span><span>צילומים: Unsplash וארכיונים פתוחים, <a href="credits.html">רשימת קרדיטים</a></span></p>
   </div>
 </footer>
-<script src="assets/js/site.js?v=1792002469" defer></script>
-<script type="module" src="assets/js/mirror.js?v=1792002469"></script>
+<script src="assets/js/site.js?v=1792002658" defer></script>
+<script type="module" src="assets/js/mirror.js?v=1792002658"></script>
 </body>
 </html>

@@ -220,3 +220,6 @@
 .wcard ul { padding-inline-start: 1.1em; display: grid; gap: 0.3rem; font-size: 1rem; }
 @media (max-width: 62em) { .watch-app { grid-template-columns: 1fr; } .watch-side { max-height: none; } .watch-lib { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 40em) { .watch-lib { grid-template-columns: 1fr; } }
+.mirror-view .guide { position: absolute; z-index: 4; bottom: 14px; inset-inline: 0; margin-inline: auto; width: fit-content; max-width: min(90%, 40rem); background: rgba(0,0,0,0.78); color: #fff; padding: 0.7rem 1.1rem; font-size: clamp(1.0625rem, 1.6vw, 1.375rem); font-weight: 600; line-height: 1.35; text-align: center; }
+.mirror-view .guide[hidden] { display: none; }
+.mirror-view .score span { display: block; font-size: 1rem; font-weight: 600; background: rgba(0,0,0,0.6); padding: 0.2rem 0.5rem; margin-top: 0.3rem; }
