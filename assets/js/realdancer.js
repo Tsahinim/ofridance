@@ -39,37 +39,41 @@ export function loadClip(id) {
 }
 
 // ---------- outfits ----------
-// One body, two outfits. Parts of the mesh are triangle ranges (found once by connectivity):
-// sunglasses always come off so the face shows; the headphones stay for hip-hop only.
-// Modern swaps the texture: the yellow street trousers become black studio trousers.
-const PARTS = { glasses: [[16036, 17136], [20272, 21424]], headphones: [[21424, 27146]] };
-const OUTFITS = {
-  hiphop: { hide: ['glasses'], map: null },
-  modern: { hide: ['glasses', 'headphones'], map: 'models/dancer-modern.png' },
-};
-const maps = {};
-function outfitMap(src) {
-  if (!maps[src]) {
-    const get = () => new THREE.TextureLoader().loadAsync(BASE + src);
-    maps[src] = get().catch(() => new Promise((ok) => setTimeout(ok, 600)).then(get))
-      .then((t) => { t.flipY = false; t.colorSpace = THREE.SRGBColorSpace; return t; })
-      .catch((e) => { delete maps[src]; throw e; });
+// Two dancers built in Blender from MakeHuman (one body, dressed twice): street clothes and a ponytail for hip-hop,
+// a studio top, soft trousers, bare feet and a bun for modern. Each outfit is its own rigged model.
+const MODELS = { hiphop: 'models/dancer-hiphop.glb', modern: 'models/dancer-modern.glb' };
+const models = {};
+function loadModel(name) {
+  const src = MODELS[name] || MODELS.hiphop;
+  if (!models[src]) {
+    const get = () => new GLTFLoader().loadAsync(BASE + src);
+    models[src] = get().catch(() => new Promise((ok) => setTimeout(ok, 600)).then(get)).catch((e) => { delete models[src]; throw e; });
   }
-  return maps[src];
+  return models[src];
 }
 
-let modelPromise = null;
-function loadModel() {
-  if (!modelPromise) modelPromise = new GLTFLoader().loadAsync(`${BASE}models/dancer.glb`);
-  return modelPromise;
+// skin and cloth are solid; hair, brows and lashes are cut-outs (sorted blending would flicker on a moving body)
+function tuneMaterial(m) {
+  const n = (m.name || '').toLowerCase();
+  const cutout = /hair|ponytail|bun|braid|eyebrow|eyelash/.test(n);
+  m.transparent = false; m.depthWrite = true;
+  m.alphaTest = cutout ? 0.45 : 0;
+  m.side = cutout ? THREE.DoubleSide : THREE.FrontSide;
+  // one dancer in both outfits: the same warm skin and the same dark-brown hair
+  if (/bun|braid/.test(n)) m.color.setRGB(0.24, 0.16, 0.12);
+  if (/ponytail/.test(n)) m.color.setRGB(0.78, 0.62, 0.52);
+  if (/crop_top/.test(n)) m.color.setRGB(0.74, 0.74, 0.74);
+  if (/body/.test(n)) { m.color.setRGB(1, 0.86, 0.74); m.roughness = 0.62; m.metalness = 0; }
+  else if (/eye/.test(n) && !cutout) { m.roughness = 0.25; }
+  else { m.roughness = Math.max(0.75, m.roughness ?? 0.8); m.metalness = 0; }
+  m.envMapIntensity = 0.55;
 }
 
-export async function createRealDancer(opts = {}) {
-  const gltf = await loadModel();
-  // every dancer gets its own copy of the skeleton
+async function buildRig(name) {
+  const gltf = await loadModel(name);
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
   const root = clone(gltf.scene);
-  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = o.material.clone(); o.material.envMapIntensity = 0.55; } });
+  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = o.material.clone(); tuneMaterial(o.material); } });
   const bones = {};
   root.traverse((o) => { if (o.isBone) bones[o.name.replace(/^mixamorig:?/, '')] = o; });
   // normalise height to 1.66 m, feet on the floor
@@ -80,43 +84,42 @@ export async function createRealDancer(opts = {}) {
   const box2 = new THREE.Box3().setFromObject(root, true);
   root.position.y -= box2.min.y;
   root.updateMatrixWorld(true);
-
   const wp = (n) => bones[n].getWorldPosition(new THREE.Vector3());
-  const rest = SEGS.map((name) => {
-    const b = bones[name];
-    const d = CHILD[name] ? wp(CHILD[name]).sub(wp(name)) : UP.clone();
+  const rest = SEGS.map((seg) => {
+    const b = bones[seg];
+    const d = CHILD[seg] ? wp(CHILD[seg]).sub(wp(seg)) : UP.clone();
     return { b, qRest: b.getWorldQuaternion(new THREE.Quaternion()), qBasisInv: basisQuat(d).invert() };
   });
   const legLen = wp('LeftLeg').distanceTo(wp('LeftUpLeg')) + wp('LeftFoot').distanceTo(wp('LeftLeg'));
-  const hipRest = wp('Hips');
-
+  // the head has no end bone: keep a point at the crown to measure how tall she reaches
+  const crown = new THREE.Object3D(); bones.Head.add(crown);
+  crown.position.copy(bones.Head.worldToLocal(new THREE.Vector3(0, box2.max.y - box2.min.y + 0.0, 0).setX(wp('Head').x).setZ(wp('Head').z)));
+  bones.HeadTop_End = crown;
   // fingers: relax the flat rest pose into a soft natural curl
   for (const side of ['Left', 'Right']) for (const f of ['Index', 'Middle', 'Ring', 'Pinky']) for (let i = 1; i <= 3; i++) {
     const b = bones[`${side}Hand${f}${i}`]; if (!b) continue;
-    b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(side === 'Left' ? 1 : 1, 0, 0), i === 1 ? 0.35 : 0.45));
+    b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), i === 1 ? 0.35 : 0.45));
   }
+  return { root, bones, rest, legLen, hipRest: wp('Hips'), wp, fitCache: new WeakMap() };
+}
 
-  const meshes = []; root.traverse((m) => { if (m.isMesh) meshes.push(m); });
-  for (const m of meshes) { m.geometry = m.geometry.clone(); m.userData.fullIndex = m.geometry.index.array.slice(); m.userData.map = m.material.map; }
-  let outfit = null;
+export async function createRealDancer(opts = {}) {
+  // a stable holder: the page keeps this object while the outfits change inside it
+  const holder = new THREE.Group();
+  const rigs = {};
+  let rig = null, root = null, bones = null, rest = null, legLen = 1, wp = null, outfit = null;
   async function setOutfit(name) {
-    const o = OUTFITS[name] || OUTFITS.hiphop; outfit = name;
-    const map = o.map ? await outfitMap(o.map) : null;
-    const cut = o.hide.flatMap((p) => PARTS[p]);
-    for (const m of meshes) {
-      const full = m.userData.fullIndex, keep = [];
-      let t = 0; const nt = full.length / 3;
-      for (const [s0, s1] of [...cut].sort((p, q) => p[0] - q[0])) { for (; t < Math.min(s0, nt); t++) keep.push(full[3 * t], full[3 * t + 1], full[3 * t + 2]); t = Math.max(t, s1); }
-      for (; t < nt; t++) keep.push(full[3 * t], full[3 * t + 1], full[3 * t + 2]);
-      m.geometry.setIndex(keep);
-      m.material.map = map || m.userData.map; m.material.needsUpdate = true;
-    }
+    if (!MODELS[name]) name = 'hiphop';
+    if (!rigs[name]) rigs[name] = buildRig(name).catch((e) => { delete rigs[name]; throw e; });
+    const r = await rigs[name];
+    if (rig) holder.remove(rig.root);
+    rig = r; ({ root, bones, rest, legLen, wp } = r); outfit = name;
+    holder.add(root);
+    if (clip) { const id = clip.id; clip = null; await setClip(id); }
   }
-  await setOutfit(opts.outfit || 'hiphop');
-
+  let clip = null, floor = 0, k = 1, offsets = null;
   const qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qw = new THREE.Quaternion(), qp = new THREE.Quaternion();
   const v = new THREE.Vector3(), v2 = new THREE.Vector3();
-  let clip = null, floor = 0, k = 1, offsets = null;
 
   function frameQuat(c, f, s, out) {
     const o = f * c.stride + 3 + s * 4, F = c.frames;
@@ -144,7 +147,6 @@ export async function createRealDancer(opts = {}) {
       r.b.updateMatrixWorld(true);
     }
   }
-  const fitCache = new WeakMap();
   // keep planted feet planted: our body is not the recorded dancer's, so the recorded hip path makes the feet
   // skate a little. Wherever a foot is down and still, move the hips so that foot stays exactly where it landed.
   function footLock(c) {
@@ -167,7 +169,8 @@ export async function createRealDancer(opts = {}) {
   }
   async function setClip(id) {
     const c = await loadClip(id);
-    clip = c; k = legLen / c.leg; offsets = null;
+    clip = c; c.id = id; k = legLen / c.leg; offsets = null;
+    const fitCache = rig.fitCache;
     if (!fitCache.has(c)) {
       // sample the clip once: lift it so the lowest foot rests on the floor, and measure how much room the whole body needs
       floor = 0; const lows = [], tops = []; let r = 0;
@@ -187,8 +190,9 @@ export async function createRealDancer(opts = {}) {
     pose(0);
     return c;
   }
-  return { root, bones, setClip, pose, setOutfit, get outfit() { return outfit; }, get clip() { return clip; }, hipRest,
-    hips: () => wp('Hips') };
+  await setOutfit(opts.outfit || 'hiphop');
+  return { root: holder, get bones() { return bones; }, setClip, pose, setOutfit, get outfit() { return outfit; }, get clip() { return clip; },
+    get hipRest() { return rig.hipRest; }, hips: () => wp('Hips') };
 }
 
 // ---------- a little theatre to show her in ----------
