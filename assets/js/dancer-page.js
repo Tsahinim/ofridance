@@ -26,7 +26,7 @@ async function init(app) {
       if (st.side !== side) continue;
       const items = MOVES.filter((m) => m.style === g && (!level || m.lv === level)).sort((a, b) => (a.routine - b.routine) || (a.lv - b.lv));
       if (!items.length) continue;
-      const h = document.createElement('h2'); h.className = 'rd-group'; h.innerHTML = `${st.he}<small lang="en" dir="ltr">${st.en}</small>`; nav.appendChild(h);
+      const h = document.createElement('h2'); h.className = 'rd-group'; h.textContent = st.he; nav.appendChild(h);
       const ul = document.createElement('ul');
       for (const m of items) {
         const li = document.createElement('li');
@@ -72,7 +72,6 @@ async function init(app) {
     // info
     const info = app.querySelector('.rd-info');
     info.querySelector('.rd-name').textContent = m.he;
-    info.querySelector('.rd-en').textContent = m.en;
     info.querySelector('.rd-level').innerHTML = `<span class="rd-lv" data-lv="${m.lv}"><i></i><i></i><i></i></span> ${st.he} · ${LEVELS[m.lv]}${dancer.clip.bpm ? ` · <bdi>${dancer.clip.bpm}</bdi> פעימות לדקה` : ''}`;
     info.querySelector('.rd-desc').textContent = m.d;
     info.querySelector('.rd-steps').innerHTML = STEPS[m.lv].map((s) => `<li>${s}</li>`).join('');

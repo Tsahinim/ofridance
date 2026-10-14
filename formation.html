@@ -4,24 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>עימוד · OFRIDANCE</title>
-<meta name="description" content="אפליקציית עימוד בעברית: גוררים רקדניות על הבמה, מוסיפים מערך לכל שמינייה בציר הזמן, ומנגנים את המעברים עם מוזיקה. בלי הרשמה, נשמר אוטומטית.">
+<meta name="description" content="אפליקציית עימוד בעברית: במה עם רשת, רקדניות שגוררים למקום, ציר זמן של מערכים ומעברים, מסלולים מעוקלים, מוזיקה ותלת-ממד. בלי הרשמה, נשמר אוטומטית.">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=1792008138">
-<link rel="stylesheet" href="assets/css/tools.css?v=1792008138">
-<link rel="stylesheet" href="assets/css/formation.css?v=1792008138">
+<link rel="stylesheet" href="assets/css/site.css?v=1792011085">
+<link rel="stylesheet" href="assets/css/formation.css?v=1792011085">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script>document.documentElement.classList.add('js')</script>
 </head>
 <body class="app-body">
 <a class="skip" href="#main">דילוג לתוכן</a>
-<main id="main" class="fx">
-  <div id="stage-app" class="stage-app fx-app">
-    <header class="fx-bar">
-      <a class="fx-home" href="index.html" aria-label="OFRIDANCE, חזרה לאתר"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -230 5713 947" role="img" aria-label="OFRIDANCE">
+<main id="main" class="chg-main">
+  <div id="chg" class="chg" data-screen="home">
+
+    <section class="chg-home" aria-labelledby="chg-home-h">
+      <header class="chg-top">
+        <a class="chg-logo" href="index.html" aria-label="OFRIDANCE, חזרה לאתר"><svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="-10 -230 5713 947" role="img" aria-label="OFRIDANCE">
 <path fill="currentColor" d="M372.4000244140625 711.400146484375Q274.39990234375 711.400146484375 200.10333251953125 666.0429818289621Q125.8067626953125 620.6858171735491 84.30316162109375 539.0429207938058Q42.799560546875 457.4000244140625 42.799560546875 349.00184343047954Q42.799560546875 239.5999755859375 84.30316162109375 157.95707920619418Q125.8067626953125 76.31418282645086 200.10333251953125 30.95701817103793Q274.39990234375 -14.400146484375 372.4000244140625 -14.400146484375Q472.0001220703125 -14.400146484375 546.6002197265625 30.79986572265625Q621.2003173828125 75.9998779296875 662.7003784179688 157.59833134069922Q704.200439453125 239.19678475171094 704.200439453125 349.00211094677604Q704.200439453125 457.800048828125 662.2003784179688 539.4000854492188Q620.2003173828125 621.0001220703125 545.6002197265625 666.2001342773438Q471.0001220703125 711.400146484375 372.4000244140625 711.400146484375ZM372.27754136871437 600.99853515625Q438.9996337890625 600.99853515625 486.86131389594516 569.9552373471467Q534.7229940028278 538.9119395380435 561.1608744428202 482.30357294497287Q587.5987548828125 425.6952063519022 587.5987548828125 349.0Q587.5987548828125 271.3650704394179 561.1305054903808 214.7372394658168Q534.6622560979489 158.10940849221572 486.74559771509826 127.05543666798286Q438.82893933224756 96.00146484375 372.20196672371236 96.00146484375Q307.400390625 96.00146484375 258.9528157052818 126.55468813911159Q210.50524078556364 157.10791143447318 184.45324295137556 213.6541754437991Q158.4012451171875 270.200439453125 158.4012451171875 348.9578921669408Q158.4012451171875 426.799560546875 184.45028119910424 483.3458245562009Q210.49931728102098 539.8920885655268 258.94138438072576 570.4453118608884Q307.38345148043055 600.99853515625 372.27754136871437 600.99853515625Z M804.99951171875 697.0V0.0H1267.9998779296875V103.4014892578125H920.6011962890625V288.399169921875H1222.2000732421875V391.8006591796875H920.6011962890625V697.0Z M1350.99951171875 697.0V0.0H1573.8004150390625Q1657.0006103515625 0.0 1708.8006591796875 24.300048828125Q1760.6007080078125 48.60009765625 1785.20068359375 93.60015869140625Q1809.8006591796875 138.6002197265625 1809.8006591796875 200.000244140625Q1809.8006591796875 293.0006103515625 1756.6004638671875 344.70068359375Q1703.4002685546875 396.4007568359375 1604.4000244140625 403.8006591796875Q1584.19970703125 404.400634765625 1561.1995849609375 404.400634765625Q1538.199462890625 404.400634765625 1520.1995849609375 404.400634765625H1466.6011962890625V697.0ZM1733.3990478515625 697.0 1556.3992919921875 391.00048828125 1674.801025390625 376.80029296875 1866.801025390625 697.0ZM1466.6011962890625 301.59912109375H1562.000244140625Q1599.5997314453125 301.59912109375 1629.199462890625 292.59930419921875Q1658.7991943359375 283.5994873046875 1676.4990844726562 261.79974365234375Q1694.198974609375 240.0 1694.198974609375 201.4002685546875Q1694.198974609375 162.2005615234375 1676.4990844726562 141.100830078125Q1658.7991943359375 120.0010986328125 1628.8994750976562 111.7012939453125Q1598.999755859375 103.4014892578125 1562.000244140625 103.4014892578125H1466.6011962890625Z M2509.99951171875 697.0V0.0H2709.7999267578125Q2882.4000244140625 0.0 2977.2000732421875 92.29998779296875Q3072.0001220703125 184.5999755859375 3072.0001220703125 354.0Q3072.0001220703125 520.0 2978.4000854492188 608.5Q2884.800048828125 697.0 2708.7999267578125 697.0ZM2625.6011962890625 590.7984619140625H2697.5997314453125Q2779.3992919921875 590.7984619140625 2837.0989990234375 568.4987182617188Q2894.7987060546875 546.198974609375 2925.0985717773438 493.29931640625Q2955.3984375 440.399658203125 2955.3984375 349.7999267578125Q2955.3984375 260.4002685546875 2925.6986083984375 206.900634765625Q2895.998779296875 153.4010009765625 2840.6990966796875 129.80126953125Q2785.3994140625 106.2015380859375 2707.9998779296875 106.2015380859375H2625.6011962890625Z M3111.9996337890625 697.0 3387.6002197265625 0.0H3475.601318359375L3750.8018798828125 697.0H3624.800048828125L3432.4007568359375 169.20263671875L3238.6014404296875 697.0ZM3284.0010986328125 551.401123046875 3319.8016357421875 447.9996337890625H3543.39990234375L3581.200439453125 551.401123046875Z M3818.99951171875 697.0V0.0H3938.8011474609375L4274.599853515625 546.19775390625H4246.1993408203125V0.0H4361.801025390625V697.0H4240.3994140625L3906.6007080078125 149.80224609375H3934.6011962890625V697.0Z M4791.4000244140625 711.400146484375Q4693.39990234375 711.400146484375 4619.099792480469 666.0001220703125Q4544.7996826171875 620.60009765625 4503.299621582031 538.7000732421875Q4461.799560546875 456.800048828125 4461.799560546875 348.0Q4461.799560546875 239.199951171875 4503.299621582031 157.7999267578125Q4544.7996826171875 76.39990234375 4619.099792480469 30.9998779296875Q4693.39990234375 -14.400146484375 4791.4000244140625 -14.400146484375Q4900.4002685546875 -14.400146484375 4979.8004150390625 39.79998779296875Q5059.2005615234375 94.0001220703125 5094.0006103515625 189.600341796875L4985.5989990234375 229.40087890625Q4961.9991455078125 166.201171875 4912.199401855469 131.101318359375Q4862.399658203125 96.00146484375 4791.4000244140625 96.00146484375Q4726.400390625 96.00146484375 4678.000671386719 126.80126953125Q4629.6009521484375 157.60107421875 4603.5010986328125 213.70074462890625Q4577.4012451171875 269.8004150390625 4577.4012451171875 348.0Q4577.4012451171875 426.1995849609375 4603.5010986328125 482.79925537109375Q4629.6009521484375 539.39892578125 4678.000671386719 570.19873046875Q4726.400390625 600.99853515625 4791.4000244140625 600.99853515625Q4862.399658203125 600.99853515625 4912.199401855469 565.5986938476562Q4961.9991455078125 530.1988525390625 4985.5989990234375 467.59912109375L5094.0006103515625 506.7996826171875Q5059.2005615234375 601.39990234375 4979.8004150390625 656.4000244140625Q4900.4002685546875 711.400146484375 4791.4000244140625 711.400146484375Z M5183.99951171875 697.0V0.0H5646.5997314453125V103.4014892578125H5299.6011962890625V288.399169921875H5620.2001953125V391.8006591796875H5299.6011962890625V593.5985107421875H5646.5997314453125V697.0Z"/>
 <g transform="translate(1883,0)" class="lg-dancer" fill="none" stroke="currentColor" stroke-width="112" stroke-linecap="round" stroke-linejoin="round">
 <circle class="lg-head" cx="356" cy="-92" r="69" fill="currentColor" stroke="none"/>
@@ -30,159 +31,79 @@
 <path class="lg-arm" d="M382 112 C 446 84, 500 10, 524 -140"/>
 </g>
 </svg></a>
-      <h1 class="sr-only">עימוד</h1>
-      <label class="fx-name"><span class="sr-only">שם הקטע</span><input id="title" type="text" maxlength="40"></label>
-      <button id="lib" class="fx-btn" type="button">הקטעים שלי</button>
-      <div class="fx-tools">
-        <button id="undo" class="fx-btn" type="button" title="ביטול פעולה (Ctrl+Z)">ביטול</button>
-        <button id="redo" class="fx-btn" type="button" title="חזרה על פעולה (Ctrl+Y)">חזרה</button>
-        <button id="view3d" class="fx-btn" type="button" aria-pressed="false">מבט תלת-ממד</button>
-        <button id="png" class="fx-btn" type="button">תמונה</button>
-        <button id="print" class="fx-btn" type="button">חוברת עימוד</button>
-        <button id="share" class="fx-btn fx-primary" type="button">שיתוף</button>
-        <button id="reset" class="fx-btn" type="button">קטע חדש</button>
-        <a class="fx-btn" href="stage.html">מדריך</a>
-      </div>
-    </header>
+        <h1 id="chg-home-h">עימוד</h1>
+        <label class="chg-search"><span data-icon="search" aria-hidden="true"></span><span class="sr-only">חיפוש</span><input id="chg-search" type="search" placeholder="חיפוש כוריאוגרפיה"></label>
+      </header>
+      <div class="chg-home-body"></div>
+      <button id="chg-new" type="button" class="chg-fab" data-icon="plus" aria-label="כוריאוגרפיה חדשה"></button>
+      <label class="chg-openfile">פתיחת קובץ<input id="chg-open-file" type="file" accept=".json,application/json" hidden></label>
+      <nav class="chg-tabs" aria-label="מסכים">
+        <button type="button" data-home-tab="recent" aria-selected="true">אחרונות</button>
+        <button type="button" data-home-tab="library" aria-selected="false">ספרייה</button>
+        <button type="button" data-home-tab="explore" aria-selected="false">רעיונות</button>
+      </nav>
+    </section>
 
-    <div class="fx-work">
-      <div class="stage-main fx-stage">
-        <div class="stage-host">
-          <div class="hud"><span class="big-count" aria-live="off">·</span><span class="eight">שמינייה 1</span></div>
-          <div class="stage-3d"></div>
-          <div class="fx-coach" hidden>
-            <p><b>איך מתחילים</b></p>
-            <ol><li>גוררים רקדניות על הבמה. מסגרת על הבמה בוחרת כמה יחד.</li><li>לוחצים <b>+</b> בציר הזמן למערך הבא, ומזיזים שוב.</li><li>לוחצים <b>נגן</b> ורואים את המעברים.</li></ol>
-            <button type="button" class="fx-btn fx-primary" data-coach-close>הבנתי</button>
-          </div>
+    <section class="chg-editor" aria-label="עורך הכוריאוגרפיה">
+      <header class="chg-top chg-etop">
+        <button id="chg-back" type="button" class="chg-icon" data-icon="back" aria-label="חזרה לכוריאוגרפיות"></button>
+        <span class="chg-title"></span>
+        <div class="chg-etools">
+          <button id="chg-undo" type="button" class="chg-icon" data-icon="undo" aria-label="ביטול"></button>
+          <button id="chg-redo" type="button" class="chg-icon" data-icon="redo" aria-label="חזרה"></button>
+          <button id="chg-music" type="button" class="chg-icon" data-icon="music" aria-label="מוזיקה"></button>
+          <button id="chg-layers" type="button" class="chg-icon" data-icon="layers" aria-label="כל המערכים ותצוגה"></button>
+          <button id="chg-settings" type="button" class="chg-icon" data-icon="gear" aria-label="הגדרות"></button>
         </div>
-      </div>
+      </header>
 
-      <aside class="panel fx-panel" aria-label="הגדרות">
-        <div class="fx-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected="true" data-tab="form">מערך</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="cast">רקדניות</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="music">מוזיקה</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="stage">במה</button>
+      <div class="chg-stagebox">
+        <div class="chg-note" hidden></div>
+        <svg class="chg-svg" role="img" aria-label="הבמה מלמעלה"></svg>
+        <div class="chg-3d"></div>
+        <div class="chg-colors" hidden aria-label="בחירה לפי צבע"></div>
+        <div class="chg-selbar" hidden>
+          <span class="chg-seln"></span>
+          <button id="chg-sel-card" type="button">צבע ופרטים</button>
+          <button id="chg-sel-align" type="button">סידור</button>
+          <button id="chg-sel-off" type="button">הוצאה מהמערך</button>
+          <button id="chg-sel-none" type="button" class="chg-icon" data-icon="close" aria-label="ביטול הבחירה"></button>
         </div>
-
-        <section class="fx-pane" data-pane="form" aria-label="המערך">
-          <h2>תבנית מהירה</h2>
-          <p class="fx-hint">לחיצה אחת מיישרת לצורה, וכל רקדנית הולכת למקום הקרוב אליה, כך שהסדר שקבעתן נשמר. אם בחרתן כמה רקדניות, רק הן מסתדרות.</p>
-          <div class="presets"></div>
-          <h2>המערך <small class="sel-label"></small></h2>
-          <label>שם <input id="f-name" type="text" maxlength="24"></label>
-          <div class="row">
-            <label>חלק בשיר <input id="f-section" type="text" maxlength="20" list="sections" placeholder="בית, פזמון…"></label>
-            <label>ברגע (מילים או צליל) <input id="f-cue" type="text" maxlength="60" placeholder="למשל: על הדרופ"></label>
-          </div>
-          <datalist id="sections"><option value="פתיחה"><option value="בית"><option value="פזמון"><option value="גשר"><option value="דרופ"><option value="סיום"></datalist>
-          <div class="row">
-            <label>אורך בספירות <input id="f-counts" type="number" min="1" max="64" step="1"></label>
-            <label>ספירות למעבר <input id="f-move" type="number" min="0" max="64" step="1"></label>
-          </div>
-          <label class="fx-check"><input id="snap" type="checkbox" checked> הצמדה לסימוני הבמה</label>
-          <div class="f-act" hidden><label>מה <span class="f-act-name"></span> עושה במערך הזה <input id="f-act" type="text" maxlength="80" placeholder="למשל: סולו, נכנסת מימין, יורדת לרצפה"></label></div>
-          <label>הערה לרקדניות <textarea id="f-notes" rows="2" maxlength="200" placeholder="למשל: שורה קדמית למטה, מבט לקהל"></textarea></label>
-          <div class="actions"><button id="add-f" class="chip" type="button">מערך חדש אחרי זה</button><button id="del-f" class="chip" type="button">מחיקת המערך</button></div>
-          <div class="actions"><button id="f-earlier" class="chip" type="button">להקדים</button><button id="f-later" class="chip" type="button">לאחר</button><button id="f-mirror" class="chip" type="button">היפוך ימין ושמאל</button></div>
-        </section>
-
-        <section class="fx-pane" data-pane="cast" aria-label="הרקדניות" hidden>
-          <h2>הרקדניות <small class="cast-count"></small></h2>
-          <ul class="cast"></ul>
-          <div class="actions"><button id="add-d" class="chip" type="button">הוספת רקדנית</button><button id="sel-all" class="chip" type="button">בחירת כולן</button></div>
-          <label class="fx-check"><input id="journey" type="checkbox"> להראות את כל המסלול של הרקדנית שנבחרה</label>
-          <p class="fx-hint">כדי לבחור כמה רקדניות יחד: גוררים מסגרת על הבמה, או לוחצים עם Shift. אז מופיעים כלים ליישור ולריווח.</p>
-          <h2>לאן היא מסתכלת</h2>
-          <p class="fx-hint">בוחרים רקדנית על הבמה, ואז כיוון. אפשר גם לגרור את העיגול הלבן שלידה.</p>
-          <div class="actions">
-            <button class="chip" type="button" data-face="0">לקהל</button>
-            <button class="chip" type="button" data-face="90">לימין הבמה</button>
-            <button class="chip" type="button" data-face="270">לשמאל הבמה</button>
-            <button class="chip" type="button" data-face="180">גב לקהל</button>
-            <button class="chip" type="button" data-face="all">כולן לקהל</button>
-          </div>
-        </section>
-
-        <section class="fx-pane music" data-pane="music" aria-label="המוזיקה" hidden>
-          <h2>שיר לקטע</h2>
-          <div class="actions">
-            <label class="chip file-chip">העלאת שיר<input id="song-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" class="sr-only"></label>
-            <button id="yt-btn" class="chip" type="button">קישור מיוטיוב</button>
-            <button id="demo-song" class="chip" type="button">שיר לדוגמה</button>
-            <button id="music-clear" class="chip" type="button" hidden>בלי מוזיקה</button>
-          </div>
-          <div class="yt-form" hidden>
-            <label class="sr-only" for="yt-url">קישור לסרטון ביוטיוב</label>
-            <input id="yt-url" type="url" inputmode="url" placeholder="הדביקו כאן קישור ליוטיוב" dir="ltr">
-            <button id="yt-load" class="chip" type="button">לטעון את הסרטון</button>
-          </div>
-          <p class="music-status fx-hint" role="status">אפשר להעלות שיר מהמחשב או מהטלפון: האתר ימצא לבד את הקצב ואת ה"אחת".</p>
-          <div class="yt-host" hidden></div>
-          <div class="music-fields" hidden>
-            <div class="row">
-              <label>קצב, פעמות לדקה <input id="m-bpm" type="number" step="0.1" min="40" max="240"></label>
-              <button id="tap" class="chip" type="button" style="align-self:end">הקישו בקצב</button>
-            </div>
-            <div class="actions"><button class="chip" type="button" data-tempo="2">קצב כפול</button><button class="chip" type="button" data-tempo="0.5">חצי קצב</button></div>
-            <p class="fx-hint">ה"אחת" של הקטע בשיר: <output id="m-offset">0</output> שניות</p>
-            <div class="actions">
-              <button class="chip" type="button" data-nudge="-8">שמינייה מוקדם</button>
-              <button class="chip" type="button" data-nudge="-0.5">חצי ספירה מוקדם</button>
-              <button class="chip" type="button" data-nudge="0.5">חצי ספירה מאוחר</button>
-              <button class="chip" type="button" data-nudge="8">שמינייה מאוחר</button>
-              <button id="one-here" class="chip" type="button">האחת כאן</button>
-            </div>
-            <div class="row sk-row" style="align-items:end">
-              <label>סגנון <select id="sk-style"><option value="hiphop">היפ הופ: חד ומהיר</option><option value="modern">מודרני: פתוח וזורם</option></select></label>
-              <button id="skeleton" class="button" type="button">שלד לפי השיר</button>
-            </div>
-          </div>
-        </section>
-        <section class="fx-pane" data-pane="stage" aria-label="הבמה" hidden>
-          <h2>גודל הבמה</h2>
-          <div class="row">
-            <label>רוחב, במטרים <input id="stage-w" type="number" min="4" max="30" step="0.5"></label>
-            <label>עומק, במטרים <input id="stage-d" type="number" min="3" max="30" step="0.5"></label>
-          </div>
-          <label class="fx-check"><input id="show-place" type="checkbox" checked> המספר של כל רקדנית מעליה</label>
-          <label class="fx-check"><input id="show-grid" type="checkbox"> רשת של מטרים</label>
-          <p class="fx-hint">המספרים על קדמת הבמה הם מטרים מהמרכז, והמספרים בצד הם מטרים מקדמת הבמה, כמו פסי הסימון בבמה אמיתית. ההצמדה מיישרת לחצאי מטרים. הם מופיעים גם בחוברת העימוד ובדף האישי של כל רקדנית.</p>
-          <h2>תפאורה וסימונים <small class="prop-count"></small></h2>
-          <div class="actions"><button id="prop-rect" class="chip" type="button">קובייה או ספסל</button><button id="prop-circle" class="chip" type="button">עמוד</button><button id="prop-mark" class="chip" type="button">סימון על הרצפה</button></div>
-          <div class="prop-edit" hidden>
-            <label>שם <input id="prop-text" type="text" maxlength="20"></label>
-            <button id="prop-del" class="chip" type="button">מחיקה</button>
-          </div>
-          <p class="fx-hint">גוררים אותם על הבמה כמו רקדניות. הם נשארים במקום לאורך כל הקטע.</p>
-        </section>
-      </aside>
-    </div>
-
-    <footer class="fx-dock">
-      <div class="transport fx-transport">
-        <button id="play" class="button" type="button" aria-pressed="false">נגן</button>
-        <button id="rewind" class="chip" type="button">להתחלה</button>
-        <label class="bpm-plain">קצב <input id="bpm" type="range" min="60" max="160" step="1" value="100" aria-describedby="bpm-out"> <output id="bpm-out">100</output></label>
-        <label><input id="click" type="checkbox" checked> קליק</label>
-        <label><input id="voice" type="checkbox"> ספירה בקול</label>
-        <label><input id="paths" type="checkbox" checked> מסלולים</label>
-        <label><input id="flip" type="checkbox"> מבט הרקדניות</label>
+        <div class="chg-yt" hidden></div>
       </div>
-      <div class="song-strip" hidden>
-        <div class="song-head"><b class="song-name"></b><span>לחיצה על השיר מזיזה את הנגינה לשם.</span></div>
-        <canvas aria-label="גל הקול של השיר, עם סימון השמיניות והמערכים"></canvas>
+
+      <div class="chg-timebox" dir="ltr">
+        <div class="chg-ftools" hidden>
+          <button id="chg-f-edit" type="button" data-icon="dup" aria-label="שכפול המערך"></button>
+          <button id="chg-f-del" type="button" data-icon="trash" aria-label="מחיקת המערך"></button>
+          <button id="chg-f-more" type="button" data-icon="more" aria-label="עוד"></button>
+        </div>
+        <div class="chg-time" aria-live="off">0:00</div>
+        <div class="chg-tl">
+          <div class="chg-strip"></div>
+          <canvas class="chg-wave" hidden aria-hidden="true"></canvas>
+        </div>
+        <div class="chg-playhead" aria-hidden="true"></div>
       </div>
-      <div class="fx-scrub"><input id="scrub" type="range" min="0" max="48" step="0.25" value="0" aria-label="מיקום בקטע, בספירות"><output id="scrub-out">ספירה 1</output></div>
-      <div class="ruler" aria-hidden="true"></div>
-      <div class="timeline" aria-label="ציר הזמן: מערך לכל קטע ספירות"></div>
-    </footer>
+
+      <footer class="chg-bottom">
+        <div class="chg-bside">
+          <button id="chg-full" type="button" class="chg-icon" data-icon="full" aria-label="מסך מלא"></button>
+          <button id="chg-3d" type="button" class="chg-icon" data-icon="cube" aria-label="תלת-ממד" aria-pressed="false"></button>
+        </div>
+        <button id="chg-play" type="button" class="chg-play" data-icon="play" aria-label="נגן"></button>
+        <div class="chg-bside">
+          <button id="chg-props" type="button" class="chg-icon" data-icon="props" aria-label="תפאורה"></button>
+          <button id="chg-dancers" type="button" class="chg-icon" data-icon="addp" aria-label="רקדניות"></button>
+        </div>
+      </footer>
+    </section>
+
+    <div class="chg-toast" role="status" aria-live="polite"></div>
   </div>
-  <noscript><p class="wrap">אפליקציית העימוד צריכה JavaScript כדי לעבוד.</p></noscript>
-  <div class="flash" role="status" aria-live="polite"></div>
+  <noscript><p>אפליקציית העימוד צריכה JavaScript.</p></noscript>
 </main>
-<div class="print-sheet" aria-hidden="true"></div>
+<div class="chg-print" aria-hidden="true"></div>
 <footer class="site-footer">
   <div class="cols">
     <ul><li>ללמוד</li><li><a href="what.html">מהי כוריאוגרפיה</a></li><li><a href="hiphop.html">היפ הופ</a></li><li><a href="modern.html">מחול מודרני</a></li><li><a href="create.html">איך יוצרים קטע</a></li></ul>
@@ -204,7 +125,7 @@
     <p class="legal"><span>OFRIDANCE · כוריאוגרפיה בהיפ הופ ובמחול מודרני, מגיל 12</span><span>צילומים: Unsplash וארכיונים פתוחים, <a href="credits.html">רשימת קרדיטים</a></span></p>
   </div>
 </footer>
-<script src="assets/js/site.js?v=1792008138" defer></script>
-<script type="module" src="assets/js/stage.js?v=1792008138"></script>
+<script src="assets/js/site.js?v=1792011085" defer></script>
+<script type="module" src="assets/js/formation.js?v=1792011085"></script>
 </body>
 </html>

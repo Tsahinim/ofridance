@@ -1,167 +1,89 @@
 <!--title: עימוד · OFRIDANCE-->
-<!--desc: אפליקציית עימוד בעברית: גוררים רקדניות על הבמה, מוסיפים מערך לכל שמינייה בציר הזמן, ומנגנים את המעברים עם מוזיקה. בלי הרשמה, נשמר אוטומטית.-->
+<!--desc: אפליקציית עימוד בעברית: במה עם רשת, רקדניות שגוררים למקום, ציר זמן של מערכים ומעברים, מסלולים מעוקלים, מוזיקה ותלת-ממד. בלי הרשמה, נשמר אוטומטית.-->
 <!--theme: dark-->
 <!--active: formation-->
 <!--bar: no-->
 <!--foot: no-->
 <!--body: app-body-->
-<!--head: <link rel="stylesheet" href="assets/css/tools.css">\n<link rel="stylesheet" href="assets/css/formation.css">\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>-->
-<!--scripts: <script type="module" src="assets/js/stage.js"></script>-->
+<!--head: <link rel="stylesheet" href="assets/css/formation.css">\n<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>-->
+<!--scripts: <script type="module" src="assets/js/formation.js"></script>-->
 
-<main id="main" class="fx">
-  <div id="stage-app" class="stage-app fx-app">
-    <header class="fx-bar">
-      <a class="fx-home" href="index.html" aria-label="OFRIDANCE, חזרה לאתר">{{MARK}}</a>
-      <h1 class="sr-only">עימוד</h1>
-      <label class="fx-name"><span class="sr-only">שם הקטע</span><input id="title" type="text" maxlength="40"></label>
-      <button id="lib" class="fx-btn" type="button">הקטעים שלי</button>
-      <div class="fx-tools">
-        <button id="undo" class="fx-btn" type="button" title="ביטול פעולה (Ctrl+Z)">ביטול</button>
-        <button id="redo" class="fx-btn" type="button" title="חזרה על פעולה (Ctrl+Y)">חזרה</button>
-        <button id="view3d" class="fx-btn" type="button" aria-pressed="false">מבט תלת-ממד</button>
-        <button id="png" class="fx-btn" type="button">תמונה</button>
-        <button id="print" class="fx-btn" type="button">חוברת עימוד</button>
-        <button id="share" class="fx-btn fx-primary" type="button">שיתוף</button>
-        <button id="reset" class="fx-btn" type="button">קטע חדש</button>
-        <a class="fx-btn" href="stage.html">מדריך</a>
-      </div>
-    </header>
+<main id="main" class="chg-main">
+  <div id="chg" class="chg" data-screen="home">
 
-    <div class="fx-work">
-      <div class="stage-main fx-stage">
-        <div class="stage-host">
-          <div class="hud"><span class="big-count" aria-live="off">·</span><span class="eight">שמינייה 1</span></div>
-          <div class="stage-3d"></div>
-          <div class="fx-coach" hidden>
-            <p><b>איך מתחילים</b></p>
-            <ol><li>גוררים רקדניות על הבמה. מסגרת על הבמה בוחרת כמה יחד.</li><li>לוחצים <b>+</b> בציר הזמן למערך הבא, ומזיזים שוב.</li><li>לוחצים <b>נגן</b> ורואים את המעברים.</li></ol>
-            <button type="button" class="fx-btn fx-primary" data-coach-close>הבנתי</button>
-          </div>
+    <section class="chg-home" aria-labelledby="chg-home-h">
+      <header class="chg-top">
+        <a class="chg-logo" href="index.html" aria-label="OFRIDANCE, חזרה לאתר">{{MARK}}</a>
+        <h1 id="chg-home-h">עימוד</h1>
+        <label class="chg-search"><span data-icon="search" aria-hidden="true"></span><span class="sr-only">חיפוש</span><input id="chg-search" type="search" placeholder="חיפוש כוריאוגרפיה"></label>
+      </header>
+      <div class="chg-home-body"></div>
+      <button id="chg-new" type="button" class="chg-fab" data-icon="plus" aria-label="כוריאוגרפיה חדשה"></button>
+      <label class="chg-openfile">פתיחת קובץ<input id="chg-open-file" type="file" accept=".json,application/json" hidden></label>
+      <nav class="chg-tabs" aria-label="מסכים">
+        <button type="button" data-home-tab="recent" aria-selected="true">אחרונות</button>
+        <button type="button" data-home-tab="library" aria-selected="false">ספרייה</button>
+        <button type="button" data-home-tab="explore" aria-selected="false">רעיונות</button>
+      </nav>
+    </section>
+
+    <section class="chg-editor" aria-label="עורך הכוריאוגרפיה">
+      <header class="chg-top chg-etop">
+        <button id="chg-back" type="button" class="chg-icon" data-icon="back" aria-label="חזרה לכוריאוגרפיות"></button>
+        <span class="chg-title"></span>
+        <div class="chg-etools">
+          <button id="chg-undo" type="button" class="chg-icon" data-icon="undo" aria-label="ביטול"></button>
+          <button id="chg-redo" type="button" class="chg-icon" data-icon="redo" aria-label="חזרה"></button>
+          <button id="chg-music" type="button" class="chg-icon" data-icon="music" aria-label="מוזיקה"></button>
+          <button id="chg-layers" type="button" class="chg-icon" data-icon="layers" aria-label="כל המערכים ותצוגה"></button>
+          <button id="chg-settings" type="button" class="chg-icon" data-icon="gear" aria-label="הגדרות"></button>
         </div>
-      </div>
+      </header>
 
-      <aside class="panel fx-panel" aria-label="הגדרות">
-        <div class="fx-tabs" role="tablist">
-          <button type="button" role="tab" aria-selected="true" data-tab="form">מערך</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="cast">רקדניות</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="music">מוזיקה</button>
-          <button type="button" role="tab" aria-selected="false" data-tab="stage">במה</button>
+      <div class="chg-stagebox">
+        <div class="chg-note" hidden></div>
+        <svg class="chg-svg" role="img" aria-label="הבמה מלמעלה"></svg>
+        <div class="chg-3d"></div>
+        <div class="chg-colors" hidden aria-label="בחירה לפי צבע"></div>
+        <div class="chg-selbar" hidden>
+          <span class="chg-seln"></span>
+          <button id="chg-sel-card" type="button">צבע ופרטים</button>
+          <button id="chg-sel-align" type="button">סידור</button>
+          <button id="chg-sel-off" type="button">הוצאה מהמערך</button>
+          <button id="chg-sel-none" type="button" class="chg-icon" data-icon="close" aria-label="ביטול הבחירה"></button>
         </div>
-
-        <section class="fx-pane" data-pane="form" aria-label="המערך">
-          <h2>תבנית מהירה</h2>
-          <p class="fx-hint">לחיצה אחת מיישרת לצורה, וכל רקדנית הולכת למקום הקרוב אליה, כך שהסדר שקבעתן נשמר. אם בחרתן כמה רקדניות, רק הן מסתדרות.</p>
-          <div class="presets"></div>
-          <h2>המערך <small class="sel-label"></small></h2>
-          <label>שם <input id="f-name" type="text" maxlength="24"></label>
-          <div class="row">
-            <label>חלק בשיר <input id="f-section" type="text" maxlength="20" list="sections" placeholder="בית, פזמון…"></label>
-            <label>ברגע (מילים או צליל) <input id="f-cue" type="text" maxlength="60" placeholder="למשל: על הדרופ"></label>
-          </div>
-          <datalist id="sections"><option value="פתיחה"><option value="בית"><option value="פזמון"><option value="גשר"><option value="דרופ"><option value="סיום"></datalist>
-          <div class="row">
-            <label>אורך בספירות <input id="f-counts" type="number" min="1" max="64" step="1"></label>
-            <label>ספירות למעבר <input id="f-move" type="number" min="0" max="64" step="1"></label>
-          </div>
-          <label class="fx-check"><input id="snap" type="checkbox" checked> הצמדה לסימוני הבמה</label>
-          <div class="f-act" hidden><label>מה <span class="f-act-name"></span> עושה במערך הזה <input id="f-act" type="text" maxlength="80" placeholder="למשל: סולו, נכנסת מימין, יורדת לרצפה"></label></div>
-          <label>הערה לרקדניות <textarea id="f-notes" rows="2" maxlength="200" placeholder="למשל: שורה קדמית למטה, מבט לקהל"></textarea></label>
-          <div class="actions"><button id="add-f" class="chip" type="button">מערך חדש אחרי זה</button><button id="del-f" class="chip" type="button">מחיקת המערך</button></div>
-          <div class="actions"><button id="f-earlier" class="chip" type="button">להקדים</button><button id="f-later" class="chip" type="button">לאחר</button><button id="f-mirror" class="chip" type="button">היפוך ימין ושמאל</button></div>
-        </section>
-
-        <section class="fx-pane" data-pane="cast" aria-label="הרקדניות" hidden>
-          <h2>הרקדניות <small class="cast-count"></small></h2>
-          <ul class="cast"></ul>
-          <div class="actions"><button id="add-d" class="chip" type="button">הוספת רקדנית</button><button id="sel-all" class="chip" type="button">בחירת כולן</button></div>
-          <label class="fx-check"><input id="journey" type="checkbox"> להראות את כל המסלול של הרקדנית שנבחרה</label>
-          <p class="fx-hint">כדי לבחור כמה רקדניות יחד: גוררים מסגרת על הבמה, או לוחצים עם Shift. אז מופיעים כלים ליישור ולריווח.</p>
-          <h2>לאן היא מסתכלת</h2>
-          <p class="fx-hint">בוחרים רקדנית על הבמה, ואז כיוון. אפשר גם לגרור את העיגול הלבן שלידה.</p>
-          <div class="actions">
-            <button class="chip" type="button" data-face="0">לקהל</button>
-            <button class="chip" type="button" data-face="90">לימין הבמה</button>
-            <button class="chip" type="button" data-face="270">לשמאל הבמה</button>
-            <button class="chip" type="button" data-face="180">גב לקהל</button>
-            <button class="chip" type="button" data-face="all">כולן לקהל</button>
-          </div>
-        </section>
-
-        <section class="fx-pane music" data-pane="music" aria-label="המוזיקה" hidden>
-          <h2>שיר לקטע</h2>
-          <div class="actions">
-            <label class="chip file-chip">העלאת שיר<input id="song-file" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac" class="sr-only"></label>
-            <button id="yt-btn" class="chip" type="button">קישור מיוטיוב</button>
-            <button id="demo-song" class="chip" type="button">שיר לדוגמה</button>
-            <button id="music-clear" class="chip" type="button" hidden>בלי מוזיקה</button>
-          </div>
-          <div class="yt-form" hidden>
-            <label class="sr-only" for="yt-url">קישור לסרטון ביוטיוב</label>
-            <input id="yt-url" type="url" inputmode="url" placeholder="הדביקו כאן קישור ליוטיוב" dir="ltr">
-            <button id="yt-load" class="chip" type="button">לטעון את הסרטון</button>
-          </div>
-          <p class="music-status fx-hint" role="status">אפשר להעלות שיר מהמחשב או מהטלפון: האתר ימצא לבד את הקצב ואת ה"אחת".</p>
-          <div class="yt-host" hidden></div>
-          <div class="music-fields" hidden>
-            <div class="row">
-              <label>קצב, פעמות לדקה <input id="m-bpm" type="number" step="0.1" min="40" max="240"></label>
-              <button id="tap" class="chip" type="button" style="align-self:end">הקישו בקצב</button>
-            </div>
-            <div class="actions"><button class="chip" type="button" data-tempo="2">קצב כפול</button><button class="chip" type="button" data-tempo="0.5">חצי קצב</button></div>
-            <p class="fx-hint">ה"אחת" של הקטע בשיר: <output id="m-offset">0</output> שניות</p>
-            <div class="actions">
-              <button class="chip" type="button" data-nudge="-8">שמינייה מוקדם</button>
-              <button class="chip" type="button" data-nudge="-0.5">חצי ספירה מוקדם</button>
-              <button class="chip" type="button" data-nudge="0.5">חצי ספירה מאוחר</button>
-              <button class="chip" type="button" data-nudge="8">שמינייה מאוחר</button>
-              <button id="one-here" class="chip" type="button">האחת כאן</button>
-            </div>
-            <div class="row sk-row" style="align-items:end">
-              <label>סגנון <select id="sk-style"><option value="hiphop">היפ הופ: חד ומהיר</option><option value="modern">מודרני: פתוח וזורם</option></select></label>
-              <button id="skeleton" class="button" type="button">שלד לפי השיר</button>
-            </div>
-          </div>
-        </section>
-        <section class="fx-pane" data-pane="stage" aria-label="הבמה" hidden>
-          <h2>גודל הבמה</h2>
-          <div class="row">
-            <label>רוחב, במטרים <input id="stage-w" type="number" min="4" max="30" step="0.5"></label>
-            <label>עומק, במטרים <input id="stage-d" type="number" min="3" max="30" step="0.5"></label>
-          </div>
-          <label class="fx-check"><input id="show-place" type="checkbox" checked> המספר של כל רקדנית מעליה</label>
-          <label class="fx-check"><input id="show-grid" type="checkbox"> רשת של מטרים</label>
-          <p class="fx-hint">המספרים על קדמת הבמה הם מטרים מהמרכז, והמספרים בצד הם מטרים מקדמת הבמה, כמו פסי הסימון בבמה אמיתית. ההצמדה מיישרת לחצאי מטרים. הם מופיעים גם בחוברת העימוד ובדף האישי של כל רקדנית.</p>
-          <h2>תפאורה וסימונים <small class="prop-count"></small></h2>
-          <div class="actions"><button id="prop-rect" class="chip" type="button">קובייה או ספסל</button><button id="prop-circle" class="chip" type="button">עמוד</button><button id="prop-mark" class="chip" type="button">סימון על הרצפה</button></div>
-          <div class="prop-edit" hidden>
-            <label>שם <input id="prop-text" type="text" maxlength="20"></label>
-            <button id="prop-del" class="chip" type="button">מחיקה</button>
-          </div>
-          <p class="fx-hint">גוררים אותם על הבמה כמו רקדניות. הם נשארים במקום לאורך כל הקטע.</p>
-        </section>
-      </aside>
-    </div>
-
-    <footer class="fx-dock">
-      <div class="transport fx-transport">
-        <button id="play" class="button" type="button" aria-pressed="false">נגן</button>
-        <button id="rewind" class="chip" type="button">להתחלה</button>
-        <label class="bpm-plain">קצב <input id="bpm" type="range" min="60" max="160" step="1" value="100" aria-describedby="bpm-out"> <output id="bpm-out">100</output></label>
-        <label><input id="click" type="checkbox" checked> קליק</label>
-        <label><input id="voice" type="checkbox"> ספירה בקול</label>
-        <label><input id="paths" type="checkbox" checked> מסלולים</label>
-        <label><input id="flip" type="checkbox"> מבט הרקדניות</label>
+        <div class="chg-yt" hidden></div>
       </div>
-      <div class="song-strip" hidden>
-        <div class="song-head"><b class="song-name"></b><span>לחיצה על השיר מזיזה את הנגינה לשם.</span></div>
-        <canvas aria-label="גל הקול של השיר, עם סימון השמיניות והמערכים"></canvas>
+
+      <div class="chg-timebox" dir="ltr">
+        <div class="chg-ftools" hidden>
+          <button id="chg-f-edit" type="button" data-icon="dup" aria-label="שכפול המערך"></button>
+          <button id="chg-f-del" type="button" data-icon="trash" aria-label="מחיקת המערך"></button>
+          <button id="chg-f-more" type="button" data-icon="more" aria-label="עוד"></button>
+        </div>
+        <div class="chg-time" aria-live="off">0:00</div>
+        <div class="chg-tl">
+          <div class="chg-strip"></div>
+          <canvas class="chg-wave" hidden aria-hidden="true"></canvas>
+        </div>
+        <div class="chg-playhead" aria-hidden="true"></div>
       </div>
-      <div class="fx-scrub"><input id="scrub" type="range" min="0" max="48" step="0.25" value="0" aria-label="מיקום בקטע, בספירות"><output id="scrub-out">ספירה 1</output></div>
-      <div class="ruler" aria-hidden="true"></div>
-      <div class="timeline" aria-label="ציר הזמן: מערך לכל קטע ספירות"></div>
-    </footer>
+
+      <footer class="chg-bottom">
+        <div class="chg-bside">
+          <button id="chg-full" type="button" class="chg-icon" data-icon="full" aria-label="מסך מלא"></button>
+          <button id="chg-3d" type="button" class="chg-icon" data-icon="cube" aria-label="תלת-ממד" aria-pressed="false"></button>
+        </div>
+        <button id="chg-play" type="button" class="chg-play" data-icon="play" aria-label="נגן"></button>
+        <div class="chg-bside">
+          <button id="chg-props" type="button" class="chg-icon" data-icon="props" aria-label="תפאורה"></button>
+          <button id="chg-dancers" type="button" class="chg-icon" data-icon="addp" aria-label="רקדניות"></button>
+        </div>
+      </footer>
+    </section>
+
+    <div class="chg-toast" role="status" aria-live="polite"></div>
   </div>
-  <noscript><p class="wrap">אפליקציית העימוד צריכה JavaScript כדי לעבוד.</p></noscript>
-  <div class="flash" role="status" aria-live="polite"></div>
+  <noscript><p>אפליקציית העימוד צריכה JavaScript.</p></noscript>
 </main>
-<div class="print-sheet" aria-hidden="true"></div>
+<div class="chg-print" aria-hidden="true"></div>
