@@ -267,7 +267,32 @@ function poseAt(state, tCounts) {
 const total = (s) => s.formations.reduce((a, f) => a + f.counts, 0);
 
 function makeCast(n) { return Array.from({ length: n }, (_, i) => ({ id: 'd' + (i + 1) + Math.random().toString(36).slice(2, 6), name: NAMES[i % NAMES.length], color: COLORS[i % COLORS.length] })); }
-function applyPreset(dancers, key) { const pts = PRESETS[key].f(dancers.length); const pos = {}; dancers.forEach((d, i) => { pos[d.id] = pts[i]; }); return pos; }
+// Give every dancer the free spot in the new shape that is closest to where she stands now, so the order
+// the choreographer set is kept and only the shape is tidied (Hungarian method on the squared distances).
+function matchSlots(cur, slots) {
+  const n = cur.length, INF = 1e18, a = [[]];
+  for (let i = 0; i < n; i++) a.push([0, ...slots.map((s) => (cur[i][0] - s[0]) ** 2 + (cur[i][1] - s[1]) ** 2)]);
+  const u = new Array(n + 1).fill(0), v = new Array(n + 1).fill(0), p = new Array(n + 1).fill(0), way = new Array(n + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    p[0] = i; let j0 = 0; const minv = new Array(n + 1).fill(INF), used = new Array(n + 1).fill(false);
+    do {
+      used[j0] = true; const i0 = p[j0]; let delta = INF, j1 = 0;
+      for (let j = 1; j <= n; j++) if (!used[j]) { const c = a[i0][j] - u[i0] - v[j]; if (c < minv[j]) { minv[j] = c; way[j] = j0; } if (minv[j] < delta) { delta = minv[j]; j1 = j; } }
+      for (let j = 0; j <= n; j++) if (used[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta;
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+  }
+  const out = new Array(n); for (let j = 1; j <= n; j++) out[p[j] - 1] = j - 1; return out;
+}
+// from: current positions (optional). Without them the dancers fill the shape in their numbered order.
+function applyPreset(dancers, key, from) {
+  const pts = PRESETS[key].f(dancers.length); const pos = {};
+  const have = from && dancers.every((d) => from[d.id]);
+  const idx = have ? matchSlots(dancers.map((d) => from[d.id]), pts) : dancers.map((_, i) => i);
+  dancers.forEach((d, i) => { const q = pts[idx[i]]; pos[d.id] = [q[0], q[1], have ? from[d.id][2] || 0 : 0]; });
+  return pos;
+}
 
 // ---------- MINI (home page) ----------
 function mini(host) {
@@ -556,8 +581,26 @@ function full(app) {
   });
 
   // presets
+  // a quick shape keeps everyone on her side: each dancer takes the nearest spot in the new shape.
+  // With two or more selected, only they are arranged, in the place where they stand.
+  function usePreset(k) {
+    stop(); scrubbing = false; snapshot();
+    const f = state.formations[sel], group = selSet.size >= 2 ? state.dancers.filter((d) => selSet.has(d.id) && f.pos[d.id]) : state.dancers;
+    if (group === state.dancers) { f.pos = applyPreset(state.dancers, k, f.pos); }
+    else {
+      let pts = PRESETS[k].f(group.length);
+      const box = (P) => { const xs = P.map((q) => q[0]), ys = P.map((q) => q[1]); return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) }; };
+      const cur = group.map((d) => f.pos[d.id]), gb = box(cur), sb = box(pts);
+      const sc = clamp(Math.max((gb.x1 - gb.x0) / Math.max(sb.x1 - sb.x0, 0.01), (gb.y1 - gb.y0) / Math.max(sb.y1 - sb.y0, 0.01)), 0.35, 1);
+      const gc = [(gb.x0 + gb.x1) / 2, (gb.y0 + gb.y1) / 2], scn = [(sb.x0 + sb.x1) / 2, (sb.y0 + sb.y1) / 2];
+      pts = pts.map((q) => [clamp(gc[0] + (q[0] - scn[0]) * sc, 0.03, 0.97), clamp(gc[1] + (q[1] - scn[1]) * sc, 0.04, 0.96)]);
+      const idx = matchSlots(cur, pts);
+      group.forEach((d, i) => { f.pos[d.id] = [pts[idx[i]][0], pts[idx[i]][1], f.pos[d.id][2] || 0]; });
+    }
+    drawNow(); renderTimeline(); save();
+  }
   const pre = $('.presets');
-  Object.entries(PRESETS).forEach(([k, v]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v.name; b.addEventListener('click', () => { stop(); scrubbing = false; snapshot(); const keep = state.formations[sel].pos; const pos = applyPreset(state.dancers, k); for (const id in pos) pos[id][2] = (keep[id] && keep[id][2]) || 0; state.formations[sel].pos = pos; drawNow(); renderTimeline(); save(); }); pre.appendChild(b); });
+  Object.entries(PRESETS).forEach(([k, v]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v.name; b.addEventListener('click', () => usePreset(k)); pre.appendChild(b); });
 
   // formation fields
   $('#f-name').addEventListener('input', (e) => { state.formations[sel].name = e.target.value || 'מערך'; renderTimeline(); save(); });
@@ -767,10 +810,12 @@ function full(app) {
       : { low: ['cluster', 'column', 'semi', 'scatter'], mid: ['twoLines', 'windows', 'diagonal', 'triangle'], high: ['v', 'line', 'arrow', 'windows'] };
     const moveFor = (lv, counts) => style === 'modern' ? Math.min(counts, lv === 'high' ? 4 : 8) : Math.min(counts, lv === 'high' ? 2 : 4);
     const used = { low: 0, mid: 0, high: 0 };
+    let prevPos = state.formations[0] && state.formations[0].pos;
     state.formations = secs.map((sct, i) => {
       const key = pick[sct.lv][used[sct.lv]++ % 4];
       const name = i === 0 ? 'פתיחה' : i === secs.length - 1 ? 'סיום' : `${sct.label} ${used[sct.lv]}`;
-      return { name, counts: sct.len * 8, move: moveFor(sct.lv, sct.len * 8), pos: applyPreset(state.dancers, key), level: sct.lv };
+      const pos = applyPreset(state.dancers, key, prevPos); prevPos = pos;
+      return { name, counts: sct.len * 8, move: moveFor(sct.lv, sct.len * 8), pos, level: sct.lv };
     });
     sel = 0; t = 0; renderAll(); save();
     flash(`נבנו ${secs.length} מערכים לפי השיר. עכשיו מתאימים כל אחד ביד.`);
@@ -897,7 +942,7 @@ function full(app) {
       names.forEach((nm, i) => { if (dancers[i]) dancers[i].name = nm.slice(0, 14); });
       const seq = style === 'modern' ? [['פתיחה', 'scatter'], ['אלכסון', 'diagonal'], ['חצי מעגל', 'semi'], ['אשכול', 'cluster'], ['מעגל', 'circle'], ['טור', 'column'], ['חלונות', 'windows']] : [['פתיחה', 'cluster'], ['שורה', 'line'], ['וי', 'v'], ['חלונות', 'windows'], ['חץ', 'arrow'], ['משולש', 'triangle'], ['שתי שורות', 'twoLines']];
       const per = style === 'modern' ? 16 : 8, count = Math.max(2, Math.round((eights * 8) / per));
-      const formations = Array.from({ length: count }, (_, i) => { const [nm, key] = i === count - 1 ? ['סיום', style === 'modern' ? 'semi' : 'twoLines'] : seq[i % seq.length]; return { name: i >= seq.length && i < count - 1 ? `${nm} ${Math.floor(i / seq.length) + 1}` : nm, counts: per, move: style === 'modern' ? 8 : 4, pos: applyPreset(dancers, key) }; });
+      let prevP = null; const formations = Array.from({ length: count }, (_, i) => { const [nm, key] = i === count - 1 ? ['סיום', style === 'modern' ? 'semi' : 'twoLines'] : seq[i % seq.length]; return { name: i >= seq.length && i < count - 1 ? `${nm} ${Math.floor(i / seq.length) + 1}` : nm, counts: per, move: style === 'modern' ? 8 : 4, pos: (prevP = applyPreset(dancers, key, prevP)) }; });
       const st = { title: f('title').value || 'קטע חדש', bpm: style === 'modern' ? 80 : 100, stage: { w: clamp(+f('w').value || 10, 4, 30) }, props: [], dancers, formations, style };
       const id = newId(); localStorage.setItem(PKEY(id), JSON.stringify(st)); lib.items[id] = { title: st.title, updated: Date.now() }; lib.cur = id; saveLib();
       try { sessionStorage.setItem('ofridance-fx-tab', 'music'); } catch (e) {}
