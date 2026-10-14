@@ -520,3 +520,28 @@ p + p { margin-top: 0.9em; }
 .credit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: 1.5rem 8px; }
 .credit-grid img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
 .credit-grid figcaption { font-size: 0.8125rem; line-height: 1.4; margin-top: 6px; }
+
+/* self-assessment (advanced pages) */
+.assess { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 22rem); gap: 2rem 3rem; align-items: start; }
+.assess-list { display: grid; gap: 6px; }
+.assess-row { display: grid; grid-template-columns: minmax(0, 1fr) 9rem 1.5rem; gap: 1rem; align-items: center; background: var(--surface); padding: 0.8rem 1rem; }
+.assess-row .an { font-weight: 600; font-size: 1.0625rem; line-height: 1.25; }
+.assess-row .an small { display: block; font-weight: 400; font-size: 0.875rem; color: var(--muted); margin-top: 0.2rem; }
+.assess-row input { accent-color: var(--accent); width: 100%; }
+.assess-row output { font-weight: 600; font-variant-numeric: tabular-nums; text-align: center; }
+.assess-shape { width: 100%; max-width: 22rem; height: auto; overflow: visible; }
+.assess-next { margin-top: 1rem; }
+.assess-next h3 { font-size: 1.375rem; margin-bottom: 0.75rem; }
+.assess-tip { background: var(--accent); color: var(--accent-ink); padding: 1rem 1.2rem; margin-bottom: 6px; }
+.assess-tip p { margin-top: 0.3rem; font-size: 1rem; }
+@media (max-width: 56em) { .assess { grid-template-columns: 1fr; } .assess-row { grid-template-columns: minmax(0, 1fr) 7rem 1.5rem; } }
+
+/* method steps (advanced pages) */
+.method { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.method li { background: var(--surface); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; min-height: 15rem; }
+.method li:nth-child(3) { background: var(--accent); color: var(--accent-ink); --muted: rgba(255,255,255,.85); }
+.method .verb { font-size: clamp(1.75rem, 2.6vw, 2.5rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1; }
+.method p { font-size: 1rem; }
+@media (max-width: 62em) { .method { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 40em) { .method { grid-template-columns: 1fr; } .method li { min-height: 0; } }
+.sources li { margin-bottom: 0.5rem; }

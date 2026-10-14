@@ -6,7 +6,7 @@ SRC = ROOT / 'src'
 mark = (ROOT / 'brand' / 'ofridance-wordmark.svg').read_text(encoding='utf-8')
 mark = re.sub(r'<title>.*?</title>', '', mark).replace('<svg ', '<svg aria-hidden="true" focusable="false" ', 1)
 NAV = [('what.html', 'what', 'מהי כוריאוגרפיה'), ('hiphop.html', 'hiphop', 'היפ הופ'), ('modern.html', 'modern', 'מודרני'),
-       ('create.html', 'create', 'איך יוצרים'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('glossary.html', 'glossary', 'מילון')]
+       ('create.html', 'create', 'איך יוצרים'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('pro.html', 'pro', 'למתקדמות'), ('glossary.html', 'glossary', 'מילון')]
 HEAD = '''<!doctype html>
 <html lang="he" dir="rtl"{theme}>
 <head>
@@ -40,7 +40,7 @@ FOOT = '''<footer class="site-footer">
   <div class="cols">
     <ul><li>ללמוד</li><li><a href="what.html">מהי כוריאוגרפיה</a></li><li><a href="hiphop.html">היפ הופ</a></li><li><a href="modern.html">מחול מודרני</a></li><li><a href="create.html">איך יוצרים קטע</a></li></ul>
     <ul><li>הסטודיו</li><li><a href="stage.html">הבמה הווירטואלית</a></li><li><a href="counts.html">בונה השמיניות</a></li><li><a href="dancer.html">הרקדנית בתלת-ממד</a></li><li><a href="mirror.html">המראה</a></li></ul>
-    <ul><li>להתקדם</li><li><a href="path.html">מסלול <bdi dir="ltr">12+</bdi></a></li><li><a href="glossary.html">מילון המונחים</a></li><li><a href="create.html#safety">חימום ובטיחות</a></li><li><a href="path.html#parents">להורים</a></li></ul>
+    <ul><li>להתקדם</li><li><a href="path.html">מסלול <bdi dir="ltr">12+</bdi></a></li><li><a href="hiphop-pro.html">היפ הופ למתקדמות</a></li><li><a href="modern-pro.html">מודרני למתקדמות</a></li><li><a href="glossary.html">מילון המונחים</a></li><li><a href="create.html#safety">חימום ובטיחות</a></li><li><a href="path.html#parents">להורים</a></li></ul>
     <ul><li>על האתר</li><li><a href="credits.html">קרדיטים לתמונות</a></li><li><a href="mirror.html#privacy">פרטיות המצלמה</a></li><li><a href="index.html">לדף הבית</a></li></ul>
   </div>
   <div></div>
