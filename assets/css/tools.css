@@ -155,3 +155,31 @@
 .panel .button { white-space: normal; text-align: center; line-height: 1.2; padding-block: 0.7rem; }
 .panel .sk-row { grid-template-columns: 1fr !important; }
 .music-status { overflow-wrap: anywhere; }
+
+/* theatre stage upgrades */
+.stage-3d { position: relative; }
+.pov-hint { position: absolute; inset-inline-start: 12px; bottom: 12px; max-width: 30ch; background: rgba(0,0,0,0.62); color: #fff; padding: 0.55rem 0.8rem; font-size: 0.9375rem; line-height: 1.35; pointer-events: none; }
+.pov-back { position: absolute; inset-inline-end: 12px; bottom: 12px; background: #fff !important; color: #0a0a0a !important; }
+.stage-svg .face-handle { cursor: grab; }
+.stage-svg .dancer .dot { transition: r 160ms var(--ease-out), filter 160ms ease; }
+.stage-svg .dancer:hover .dot { filter: brightness(1.12); }
+.ruler { position: relative; height: 26px; background: #0d0d0d; margin-inline: 8px; }
+.ruler span { position: absolute; bottom: 0; width: 1px; height: 6px; background: #3a3a3a; }
+.ruler span.e { height: 14px; background: #8a8a8a; }
+.ruler span.e b { position: absolute; bottom: 14px; inset-inline-start: 3px; font-size: 0.75rem; font-weight: 500; color: #9a9a9a; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.timeline .block { position: relative; overflow: hidden; }
+.timeline .block::after { content: ""; position: absolute; inset-inline: 0; bottom: 0; height: 3px; background: currentColor; opacity: 0.18; }
+.timeline .block[aria-pressed="true"]::after { opacity: 0.6; }
+
+/* drawn move cards and the beat pulse */
+.move-card { grid-template-columns: 58px minmax(0, 1fr); column-gap: 0.75rem; align-items: center; }
+.move-card .mv-thumb { grid-row: 1 / span 2; width: 58px; height: 74px; object-fit: contain; background: #262626; }
+.move-card .mv-text { display: grid; gap: 0.2rem; }
+.move-card[aria-pressed="true"] { background: #2e2e2e; outline: 2px solid var(--red); outline-offset: -2px; }
+@keyframes beat-pulse { 0% { transform: scale(1.22); color: #ffffff; } 100% { transform: scale(1); color: var(--red); } }
+.big-count.pulse { animation: beat-pulse 380ms cubic-bezier(0.22, 1, 0.36, 1); display: inline-block; transform-origin: 50% 70%; }
+@keyframes slot-pulse { 0% { background: var(--red); } 100% { background: #2a2a2a; } }
+.slot.now { animation: slot-pulse 420ms ease-out; }
+.slot.now .n { color: #fff; }
+.trails-toggle { display: inline-flex; align-items: center; gap: 0.5rem; }
+@media (prefers-reduced-motion: reduce) { .big-count.pulse, .slot.now { animation: none; } }

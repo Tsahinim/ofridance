@@ -45,30 +45,70 @@ function tick(accent) {
 const HE_COUNTS = ['אחת', 'שתיים', 'שלוש', 'ארבע', 'חמש', 'שש', 'שבע', 'שמונה'];
 function say(n) { try { if (!('speechSynthesis' in window)) return; const u = new SpeechSynthesisUtterance(HE_COUNTS[n - 1]); u.lang = 'he-IL'; u.rate = 1.4; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {} }
 
-// ---------- the stage drawing ----------
+// ---------- the stage drawing: a theatre stage seen from above ----------
+// Positions are [x, y, facing]. Facing is in degrees: 0 faces the audience, 90 faces stage right
+// (the performer's right, the audience's left), 180 faces upstage, 270 faces stage left.
+let stageUid = 0;
 class StageView {
   constructor(host, opts = {}) {
     this.opts = opts;
+    const id = 'st' + (++stageUid);
     this.svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'stage-svg', role: 'img', 'aria-label': opts.label || 'במה' });
     host.appendChild(this.svg);
     this.flip = false;
+    const defs = el('defs', {}, this.svg);
+    // floor boards
+    const pat = el('pattern', { id: id + 'b', width: 240, height: 48, patternUnits: 'userSpaceOnUse' }, defs);
+    el('rect', { width: 240, height: 48, fill: '#1c1b1a' }, pat);
+    el('rect', { y: 0, width: 240, height: 23, fill: '#201f1d' }, pat);
+    el('rect', { x: 0, y: 23, width: 240, height: 1.2, fill: '#121110' }, pat);
+    el('rect', { x: 0, y: 47, width: 240, height: 1.2, fill: '#121110' }, pat);
+    el('rect', { x: 150, y: 0, width: 1.2, height: 23, fill: '#141312' }, pat);
+    el('rect', { x: 60, y: 24, width: 1.2, height: 23, fill: '#141312' }, pat);
+    // a soft pool of light under each dancer
+    const rg = el('radialGradient', { id: id + 'l' }, defs);
+    el('stop', { offset: '0', 'stop-color': '#fff3df', 'stop-opacity': '0.55' }, rg);
+    el('stop', { offset: '0.55', 'stop-color': '#fff3df', 'stop-opacity': '0.16' }, rg);
+    el('stop', { offset: '1', 'stop-color': '#fff3df', 'stop-opacity': '0' }, rg);
+    this.lightFill = `url(#${id}l)`;
     const floor = el('g', {}, this.svg);
-    el('rect', { x: 0, y: 0, width: W, height: TOP + DEPTH + 26, fill: '#1b1b1b' }, floor);
-    // spike marks: centre line and eighths along the front, as on a real marley floor
+    el('rect', { x: 0, y: 0, width: W, height: TOP + DEPTH + 26, fill: `url(#${id}b)` }, floor);
+    // spike marks: centre line and eighths along the front, as on a real stage
     for (let i = 1; i < 8; i++) {
       const x = PADX + (i / 8) * (W - 2 * PADX);
-      el('rect', { x: x - (i === 4 ? 2 : 1), y: TOP + DEPTH + 6, width: i === 4 ? 4 : 2, height: 14, fill: i === 4 ? '#d92b21' : '#6b6b6b' }, floor);
-      for (let r = 1; r < 5; r++) { const y = TOP + (r / 5) * DEPTH; el('circle', { cx: x, cy: y, r: 2.2, fill: '#3a3a3a' }, floor); }
+      el('rect', { x: x - (i === 4 ? 2 : 1), y: TOP + DEPTH + 6, width: i === 4 ? 4 : 2, height: 14, fill: i === 4 ? '#d92b21' : '#8a8a8a' }, floor);
+      for (let r = 1; r < 5; r++) { const y = TOP + (r / 5) * DEPTH; el('circle', { cx: x, cy: y, r: 2, fill: '#4a4744' }, floor); }
     }
-    el('rect', { x: 0, y: TOP + DEPTH + 26, width: W, height: H - (TOP + DEPTH + 26), fill: '#0f0f0f' }, floor);
-    this.audience = el('text', { x: W / 2, y: H - 14, 'text-anchor': 'middle', fill: '#9a9a9a', 'font-size': 20 }, floor);
-    this.audience.textContent = 'קהל';
-    this.sideA = el('text', { x: 14, y: TOP + DEPTH / 2, fill: '#7a7a7a', 'font-size': 17, transform: `rotate(-90 14 ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'hanging' }, floor);
-    this.sideB = el('text', { x: W - 14, y: TOP + DEPTH / 2, fill: '#7a7a7a', 'font-size': 17, transform: `rotate(90 ${W - 14} ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'hanging' }, floor);
-    this.back = el('text', { x: W / 2, y: 22, fill: '#7a7a7a', 'font-size': 17, 'text-anchor': 'middle' }, floor);
+    // apron edge and the house
+    el('rect', { x: 0, y: TOP + DEPTH + 24, width: W, height: 3, fill: '#d92b21' }, floor);
+    el('rect', { x: 0, y: TOP + DEPTH + 27, width: W, height: H - (TOP + DEPTH + 27), fill: '#0a0a0a' }, floor);
+    for (let row = 0; row < 2; row++) for (let s = 0; s < 34; s++) {
+      const x = 40 + s * 28 + (row ? 14 : 0), y = TOP + DEPTH + 44 + row * 16;
+      el('rect', { x: x - 8, y: y - 5, width: 16, height: 9, rx: 3, fill: row ? '#151515' : '#1d1d1d' }, floor);
+    }
+    // wings: deep red curtain folds on both sides, and a valance on top
+    const curtain = (x0, w, dir) => {
+      const g = el('g', {}, floor);
+      el('rect', { x: x0, y: 0, width: w, height: TOP + DEPTH + 24, fill: '#5c0f0b' }, g);
+      for (let k = 0; k < 4; k++) el('rect', { x: x0 + (dir > 0 ? k * (w / 4) : w - (k + 1) * (w / 4)), y: 0, width: w / 8, height: TOP + DEPTH + 24, fill: '#7a1712', opacity: 0.9 }, g);
+    };
+    curtain(0, 30, 1); curtain(W - 30, 30, -1);
+    const val = el('g', {}, floor);
+    el('rect', { x: 0, y: 0, width: W, height: 14, fill: '#5c0f0b' }, val);
+    let d = 'M0 14'; for (let x = 0; x < W; x += 50) d += ` Q${x + 25} 34 ${x + 50} 14`; d += ` L${W} 0 L0 0 Z`;
+    el('path', { d, fill: '#6e1510' }, val);
+    this.audience = el('text', { x: W / 2, y: H - 6, 'text-anchor': 'middle', fill: '#8a8a8a', 'font-size': 15 }, floor);
+    this.sideA = el('text', { x: 15, y: TOP + DEPTH / 2, fill: '#f0c9c4', 'font-size': 15, transform: `rotate(-90 15 ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, floor);
+    this.sideB = el('text', { x: W - 15, y: TOP + DEPTH / 2, fill: '#f0c9c4', 'font-size': 15, transform: `rotate(90 ${W - 15} ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, floor);
+    this.back = el('text', { x: W / 2, y: 52, fill: '#7a7672', 'font-size': 15, 'text-anchor': 'middle' }, floor);
+    this.lights = el('g', { style: 'mix-blend-mode:screen' }, this.svg);
+    this.trailLayer = el('g', {}, this.svg);
     this.paths = el('g', {}, this.svg);
     this.layer = el('g', {}, this.svg);
-    this.nodes = new Map();
+    this.handle = el('g', { class: 'face-handle', visibility: 'hidden' }, this.svg);
+    el('line', { x1: 0, y1: 0, x2: 0, y2: 62, stroke: '#ffffff', 'stroke-width': 2, 'stroke-dasharray': '3 5' }, this.handle);
+    el('circle', { cx: 0, cy: 62, r: 11, fill: '#ffffff', stroke: '#d92b21', 'stroke-width': 3 }, this.handle);
+    this.nodes = new Map(); this.pools = new Map(); this.trails = new Map();
     this.labels();
   }
   labels() {
@@ -78,38 +118,72 @@ class StageView {
     this.back.textContent = this.flip ? 'קדמת הבמה' : 'עומק הבמה';
     this.audience.textContent = this.flip ? 'עומק הבמה · מבט הרקדניות' : 'קהל';
   }
-  setFlip(f) { this.flip = f; this.labels(); }
+  setFlip(f) { this.flip = f; this.labels(); this.trails.clear(); }
   map(p) { const q = this.flip ? [1 - p[0], 1 - p[1]] : p; return px(q); }
   unmap(x, y) { let p = [(x - PADX) / (W - 2 * PADX), (y - TOP) / DEPTH]; p = [clamp(p[0], 0.02, 0.98), clamp(p[1], 0.02, 0.98)]; return this.flip ? [1 - p[0], 1 - p[1]] : p; }
   toSvg(evt) { const pt = this.svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY; return pt.matrixTransform(this.svg.getScreenCTM().inverse()); }
+  scale() { return Math.min(2.4, Math.max(1, 640 / (this.svg.clientWidth || 640))); }
+  faceAngle(p) { return ((p && p[2]) || 0) + (this.flip ? 180 : 0); }
   draw(dancers, positions, opts = {}) {
-    const seen = new Set();
+    const seen = new Set(); const k = this.scale();
     dancers.forEach((d, i) => {
       seen.add(d.id);
       let n = this.nodes.get(d.id);
       if (!n) {
         n = el('g', { class: 'dancer', tabindex: this.opts.editable ? 0 : -1, role: 'button' }, this.layer);
-        n.shadow = el('ellipse', { rx: 30, ry: 10, cy: 26, fill: 'rgba(0,0,0,0.5)' }, n);
-        n.ring = el('circle', { r: 34, fill: 'none', stroke: '#ffffff', 'stroke-width': 3, opacity: 0 }, n);
-        n.dot = el('circle', { r: 26 }, n);
+        n.shadow = el('ellipse', { rx: 30, ry: 10, cy: 26, fill: 'rgba(0,0,0,0.55)' }, n);
+        n.ring = el('circle', { r: 35, fill: 'none', stroke: '#ffffff', 'stroke-width': 3, opacity: 0 }, n);
+        n.face = el('g', {}, n);
+        n.nose = el('path', { d: 'M-11 21 L0 41 L11 21 Z', fill: '#ffffff', stroke: '#0a0a0a', 'stroke-width': 2, 'stroke-linejoin': 'round' }, n.face);
+        n.dot = el('circle', { r: 26, class: 'dot' }, n);
         n.num = el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 22, 'font-weight': 600 }, n);
-        n.name = el('text', { 'text-anchor': 'middle', y: 50, 'font-size': 18, fill: '#e6e6e6' }, n);
+        n.name = el('text', { 'text-anchor': 'middle', y: 58, 'font-size': 18, fill: '#f2f2f2', 'paint-order': 'stroke', stroke: '#0a0a0a', 'stroke-width': 4 }, n);
         n.dataset.id = d.id;
         this.nodes.set(d.id, n);
+        const pool = el('ellipse', { rx: 74, ry: 46, fill: this.lightFill }, this.lights);
+        this.pools.set(d.id, pool);
       }
       n.dot.setAttribute('fill', d.color);
+      n.nose.setAttribute('fill', d.color === '#ffffff' ? '#d92b21' : '#ffffff');
       const light = ['#ffffff', '#f2b705', '#ffd54f', '#cddc39', '#bdbdbd', '#90caf9', '#8bc34a', '#00bcd4', '#2bb3a3', '#ff8a80', '#ff7a45'].includes(d.color);
       n.num.setAttribute('fill', light ? '#0a0a0a' : '#ffffff');
       n.num.textContent = i + 1;
       n.name.textContent = d.name;
       n.setAttribute('aria-label', `${d.name}, רקדנית ${i + 1}`);
-      const p = positions[d.id] || [0.5, 0.5];
+      const p = positions[d.id] || [0.5, 0.5, 0];
       const [x, y] = this.map(p);
-      const k = Math.min(2.4, Math.max(1, 640 / (this.svg.clientWidth || 640)));
       n.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)})`);
+      n.face.setAttribute('transform', `rotate(${this.faceAngle(p).toFixed(1)})`);
       n.ring.setAttribute('opacity', opts.selected === d.id ? 1 : 0);
+      const pool = this.pools.get(d.id);
+      pool.setAttribute('transform', `translate(${x.toFixed(1)} ${(y + 8).toFixed(1)}) scale(${k.toFixed(2)})`);
+      pool.setAttribute('opacity', opts.playing ? 1 : 0.55);
+      if (opts.selected === d.id && this.opts.editable && !opts.playing) {
+        this.handle.setAttribute('visibility', 'visible');
+        this.handle.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)}) rotate(${this.faceAngle(p).toFixed(1)})`);
+        this.handle.dataset.id = d.id;
+      }
     });
-    for (const [id, n] of this.nodes) if (!seen.has(id)) { n.remove(); this.nodes.delete(id); }
+    if (!opts.selected || opts.playing) this.handle.setAttribute('visibility', 'hidden');
+    for (const [id, n] of this.nodes) if (!seen.has(id)) { n.remove(); this.nodes.delete(id); this.pools.get(id)?.remove(); this.pools.delete(id); }
+    this.drawTrails(dancers, positions, !!opts.playing);
+  }
+  // a short fading trail of where each dancer has just been, while the piece plays
+  drawTrails(dancers, positions, active) {
+    if (!active) { if (this.trails.size) { this.trails.clear(); this.trailLayer.innerHTML = ''; this.trailEls = new Map(); } return; }
+    this.trailEls = this.trailEls || new Map();
+    dancers.forEach((d) => {
+      const p = positions[d.id]; if (!p) return;
+      const [x, y] = this.map(p);
+      const t = this.trails.get(d.id) || []; const last = t[t.length - 1];
+      if (!last || Math.hypot(last[0] - x, last[1] - y) > 2) t.push([x, y]);
+      if (t.length > 40) t.shift();
+      this.trails.set(d.id, t);
+      let els = this.trailEls.get(d.id);
+      if (!els) { els = [0, 1, 2, 3].map((q) => el('polyline', { fill: 'none', stroke: d.color, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': 3 + q * 2.6, opacity: 0.1 + q * 0.13 }, this.trailLayer)); this.trailEls.set(d.id, els); }
+      const n = t.length;
+      els.forEach((e, q) => { const seg = t.slice(Math.floor((q * n) / 4), Math.floor(((q + 1) * n) / 4) + 1); e.setAttribute('points', seg.map((v) => v[0].toFixed(1) + ',' + v[1].toFixed(1)).join(' ')); });
+    });
   }
   drawPaths(dancers, from, to) {
     this.paths.innerHTML = '';
@@ -124,6 +198,8 @@ class StageView {
   }
 }
 
+// shortest turn between two facings
+const turn = (a, b, k) => { let dlt = ((b - a + 540) % 360) - 180; return a + dlt * k; };
 // interpolate the whole cast at a count position in the timeline
 function poseAt(state, tCounts) {
   const F = state.formations; let start = 0;
@@ -134,13 +210,14 @@ function poseAt(state, tCounts) {
       const local = tCounts - start, mv = Math.min(f.move, f.counts);
       const k = i === 0 ? 1 : ease(clamp(mv ? local / mv : 1, 0, 1));
       const out = {};
-      state.dancers.forEach((d) => { const a = prev[d.id] || f.pos[d.id] || [0.5, 0.5], b = f.pos[d.id] || a; out[d.id] = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k]; });
+      state.dancers.forEach((d) => { const a = prev[d.id] || f.pos[d.id] || [0.5, 0.5, 0], b = f.pos[d.id] || a; out[d.id] = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, turn(a[2] || 0, b[2] || 0, k)]; });
       return { pos: out, index: i, local };
     }
     start = end;
   }
   return { pos: {}, index: 0, local: 0 };
 }
+
 const total = (s) => s.formations.reduce((a, f) => a + f.counts, 0);
 
 function makeCast(n) { return Array.from({ length: n }, (_, i) => ({ id: 'd' + (i + 1) + Math.random().toString(36).slice(2, 6), name: NAMES[i % NAMES.length], color: COLORS[i % COLORS.length] })); }
@@ -173,7 +250,7 @@ function mini(host) {
       if (n !== last) { last = n; count.textContent = n; }
       const k2 = reduce ? 1 : ease(clamp(c / 8, 0, 1));
       const pos = {}; dancers.forEach((d) => { const a = from[d.id], b = to[d.id]; pos[d.id] = [a[0] + (b[0] - a[0]) * k2, a[1] + (b[1] - a[1]) * k2]; });
-      view.draw(dancers, pos);
+      view.draw(dancers, pos, { playing: k2 < 1 });
       if (k2 < 1) raf = requestAnimationFrame(step); else { current = to; view.drawPaths(dancers, null, null); count.textContent = '8'; }
     };
     raf = requestAnimationFrame(step);
@@ -229,6 +306,8 @@ function full(app) {
       tl.appendChild(b);
     });
     const ph = document.createElement('span'); ph.className = 'playhead'; tl.appendChild(ph);
+    // a ruler of counts above the timeline, every eight numbered
+    const ru = $('.ruler'); if (ru) { ru.innerHTML = ''; const T = total(state); for (let c = 0; c < T; c++) { if (T > 200 && c % 8) continue; const t2 = document.createElement('span'); if (c % 8 === 0) { t2.className = 'e'; t2.innerHTML = `<b>${c / 8 + 1}</b>`; } t2.style.insetInlineStart = `${(c / T) * 100}%`; ru.appendChild(t2); } }
     placeHead();
   }
   function placeHead() { const ph = $('.timeline .playhead'); if (ph) ph.style.insetInlineStart = `${(clamp(t, 0, total(state)) / total(state)) * 100}%`; }
@@ -255,7 +334,7 @@ function full(app) {
     const r = poseAt(state, Math.max(0, t));
     const f = state.formations[sel];
     const pos = playing ? r.pos : f.pos;
-    view.draw(state.dancers, pos, { selected: selDancer });
+    view.draw(state.dancers, pos, { selected: selDancer, playing });
     if (showPaths && !playing && sel > 0) view.drawPaths(state.dancers, state.formations[sel - 1].pos, f.pos); else view.drawPaths(state.dancers, null, null);
     if (mode3d) mode3d.update(state.dancers, pos);
   }
@@ -272,16 +351,38 @@ function full(app) {
     if (playing) return;
     const f = state.formations[sel];
     if ($('#snap').checked) p = [Math.round(p[0] * 16) / 16, Math.round(p[1] * 10) / 10];
-    f.pos[id] = p; selDancer = id; drawNow();
+    f.pos[id] = [p[0], p[1], (f.pos[id] && f.pos[id][2]) || 0]; selDancer = id; drawNow();
   }, (id) => { if (id) { snapshot(); selDancer = id; renderCast(); } else { selDancer = null; renderCast(); drawNow(); } }, () => save());
+
+  // turning a dancer: drag the round handle, or use the facing buttons, or Q / E
+  const setFace = (id, deg) => { const f = state.formations[sel]; const p = f.pos[id] || [0.5, 0.5, 0]; f.pos[id] = [p[0], p[1], ((deg % 360) + 360) % 360]; };
+  let turning = null;
+  view.handle.addEventListener('pointerdown', (e) => { if (playing) return; turning = view.handle.dataset.id; snapshot(); view.handle.setPointerCapture(e.pointerId); e.preventDefault(); e.stopPropagation(); });
+  view.handle.addEventListener('pointermove', (e) => {
+    if (!turning) return; const q = view.toSvg(e); const c = view.map(state.formations[sel].pos[turning] || [0.5, 0.5]);
+    let deg = (Math.atan2(-(q.x - c[0]), q.y - c[1]) * 180) / Math.PI - (view.flip ? 180 : 0);
+    if (!e.shiftKey) deg = Math.round(deg / 45) * 45;
+    setFace(turning, deg); drawNow();
+  });
+  const endTurn = () => { if (turning) { turning = null; save(); } };
+  view.handle.addEventListener('pointerup', endTurn); view.handle.addEventListener('pointercancel', endTurn);
+  view.handle.style.cursor = 'grab'; view.handle.style.touchAction = 'none';
+  app.querySelectorAll('[data-face]').forEach((b) => b.addEventListener('click', () => {
+    if (playing) return; snapshot();
+    if (b.dataset.face === 'all') state.dancers.forEach((d) => setFace(d.id, 0));
+    else if (selDancer) setFace(selDancer, +b.dataset.face);
+    else { flash('בחרו קודם רקדנית על הבמה.'); return; }
+    drawNow(); save();
+  }));
 
   // keyboard nudging of the selected dancer
   view.svg.addEventListener('keydown', (e) => {
     const g = e.target.closest('.dancer'); if (!g) return; const id = g.dataset.id; selDancer = id;
     const f = state.formations[sel]; const p = f.pos[id] || [0.5, 0.5]; const s = e.shiftKey ? 0.05 : 0.0125;
     const dir = view.flip ? -1 : 1;
+    if (e.code === 'KeyQ' || e.code === 'KeyE') { e.preventDefault(); snapshot(); setFace(id, (p[2] || 0) + (e.code === 'KeyQ' ? -45 : 45)); drawNow(); save(); return; }
     const m = { ArrowLeft: [-s * dir, 0], ArrowRight: [s * dir, 0], ArrowUp: [0, -s * dir], ArrowDown: [0, s * dir] }[e.key];
-    if (!m) return; e.preventDefault(); snapshot(); f.pos[id] = [clamp(p[0] + m[0], 0.02, 0.98), clamp(p[1] + m[1], 0.02, 0.98)]; drawNow(); save();
+    if (!m) return; e.preventDefault(); snapshot(); f.pos[id] = [clamp(p[0] + m[0], 0.02, 0.98), clamp(p[1] + m[1], 0.02, 0.98), p[2] || 0]; drawNow(); save();
   });
 
   // presets

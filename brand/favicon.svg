@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="-200 -330 960 1120"><rect x="-200" y="-330" width="960" height="1120" fill="#d92b21"/><g color="#ffffff"><g transform="translate(0,0)" fill="none" stroke="currentColor" stroke-width="112" stroke-linecap="round" stroke-linejoin="round">
-<circle cx="356" cy="-92" r="69" fill="currentColor" stroke="none"/>
-<path d="M372 76 C 366 240, 356 420, 346 641"/>
-<path d="M362 310 C 280 300, 150 240, 60 130"/>
-<path d="M382 112 C 446 84, 500 10, 524 -140"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-200 -330 960 1120"><rect x="-200" y="-330" width="960" height="1120" fill="#d92b21"/><g color="#ffffff"><g transform="translate(0,0)" class="lg-dancer" fill="none" stroke="currentColor" stroke-width="112" stroke-linecap="round" stroke-linejoin="round">
+<circle class="lg-head" cx="356" cy="-92" r="69" fill="currentColor" stroke="none"/>
+<path class="lg-body" d="M372 76 C 366 240, 356 420, 346 641"/>
+<path class="lg-leg" d="M362 310 C 280 300, 150 240, 60 130"/>
+<path class="lg-arm" d="M382 112 C 446 84, 500 10, 524 -140"/>
 </g></g></svg>

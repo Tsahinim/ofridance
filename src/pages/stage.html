@@ -35,6 +35,7 @@
           <div class="song-head"><b class="song-name"></b><span>הקווים האדומים הם המערכים על השיר. לחיצה על השיר מזיזה את הנגינה לשם.</span></div>
           <canvas aria-label="גל הקול של השיר, עם סימון השמיניות והמערכים"></canvas>
         </div>
+        <div class="ruler" aria-hidden="true"></div>
         <div class="timeline" aria-label="ציר הזמן: מערך לכל קטע ספירות"></div>
       </div>
       <aside class="panel" aria-label="הגדרות">
@@ -95,6 +96,16 @@
           <h2>הרקדניות <small class="cast-count"></small></h2>
           <ul class="cast" style="margin-top:10px"></ul>
           <button id="add-d" class="chip" type="button" style="margin-top:8px">הוספת רקדנית</button>
+          <div style="margin-top:12px">
+            <p class="small" style="color:#bbb">כיוון הפנים של הרקדנית שנבחרה. אפשר גם לגרור את העיגול הלבן שליד הרקדנית.</p>
+            <div class="actions" style="margin-top:6px">
+              <button class="chip" type="button" data-face="0">לקהל</button>
+              <button class="chip" type="button" data-face="90">לימין הבמה</button>
+              <button class="chip" type="button" data-face="270">לשמאל הבמה</button>
+              <button class="chip" type="button" data-face="180">גב לקהל</button>
+              <button class="chip" type="button" data-face="all">כולן לקהל</button>
+            </div>
+          </div>
         </div>
         <div>
           <h2>לשמור ולשתף</h2>

@@ -187,23 +187,24 @@ function build(material, accent) {
     J['foot' + s] = node(J['shin' + s], 0, -0.43, 0);
     const ft = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.06, 0.22), accent); ft.position.set(0, -0.03, 0.06); ft.castShadow = true; J['foot' + s].add(ft);
     J['toe' + s] = node(J['foot' + s], 0, -0.06, 0.17);
+    J['hand' + s] = node(J['fore' + s], 0, -0.3, 0);
   }
   return { group: g, J };
 }
 
 export function createDancer(host, opts = {}) {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: false });
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: !!opts.transparent, preserveDrawingBuffer: !!opts.capture });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   host.appendChild(renderer.domElement);
-  const scene = new THREE.Scene(); scene.background = new THREE.Color(opts.background || '#141414');
+  const scene = new THREE.Scene(); if (!opts.transparent) scene.background = new THREE.Color(opts.background || '#141414');
   const cam = new THREE.PerspectiveCamera(34, 1, 0.05, 50);
   cam.position.set(0, 1.15, 3.9);
   const controls = new OrbitControls(cam, renderer.domElement);
   controls.target.set(0, 1.0, 0); controls.enableDamping = true; controls.minDistance = 1.8; controls.maxDistance = 9; controls.maxPolarAngle = Math.PI * 0.55; controls.enablePan = false;
 
   const floor = new THREE.Mesh(new THREE.CircleGeometry(2.2, 64), new THREE.MeshStandardMaterial({ color: '#202020', roughness: 0.9 }));
-  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+  floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; if (!opts.transparent) scene.add(floor);
   const front = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.004, 0.05), new THREE.MeshBasicMaterial({ color: '#d92b21' })); front.position.set(0, 0.002, 1.6); scene.add(front);
   scene.add(new THREE.HemisphereLight('#ffffff', '#303030', 0.9));
   const key = new THREE.DirectionalLight('#fff4ea', 2.4); key.position.set(-2.5, 5, 3.5); key.castShadow = true; key.shadow.mapSize.set(1024, 1024);
@@ -215,6 +216,31 @@ export function createDancer(host, opts = {}) {
   const { group, J } = build(mat, acc);
   scene.add(group);
   const tmp = new THREE.Vector3();
+
+  // motion lines: the hands and feet leave glowing trails in the air, like Forsythe's drawn lines
+  const MARKS = [['handL', '#ff3b2f'], ['handR', '#ff3b2f'], ['toeL', '#ffffff'], ['toeR', '#ffffff']], TN = 170;
+  const tPos = new Float32Array(MARKS.length * TN * 3), tCol = new Float32Array(MARKS.length * TN * 3);
+  const tGeo = new THREE.BufferGeometry();
+  tGeo.setAttribute('position', new THREE.BufferAttribute(tPos, 3)); tGeo.setAttribute('color', new THREE.BufferAttribute(tCol, 3));
+  const tMat = new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true });
+  const trailPts = new THREE.Points(tGeo, tMat); trailPts.frustumCulled = false; trailPts.visible = false; scene.add(trailPts);
+  const hist = MARKS.map(() => []); const base = MARKS.map(([, c]) => new THREE.Color(c));
+  let trailsOn = false;
+  function sampleTrails() {
+    MARKS.forEach(([j], m) => {
+      J[j].getWorldPosition(tmp); const h = hist[m]; const last = h[h.length - 1];
+      if (!last) h.push(tmp.clone());
+      else { const dd = last.distanceTo(tmp); if (dd > 0.004) { const n = Math.min(6, Math.ceil(dd / 0.012)); for (let q = 1; q <= n; q++) h.push(last.clone().lerp(tmp, q / n)); } }
+      while (h.length > TN) h.shift();
+      for (let i = 0; i < TN; i++) {
+        const v = h[h.length - TN + i] || h[0]; const o = (m * TN + i) * 3; const k = h.length - TN + i >= 0 ? (i / TN) ** 1.6 : 0;
+        if (v) { tPos[o] = v.x; tPos[o + 1] = v.y; tPos[o + 2] = v.z; }
+        tCol[o] = base[m].r * k; tCol[o + 1] = base[m].g * k; tCol[o + 2] = base[m].b * k;
+      }
+    });
+    tGeo.attributes.position.needsUpdate = true; tGeo.attributes.color.needsUpdate = true;
+  }
+  const clearTrails = () => { hist.forEach((h) => (h.length = 0)); tCol.fill(0); tGeo.attributes.color.needsUpdate = true; };
 
   function apply(p) {
     for (const j of JOINTS) {
@@ -271,6 +297,7 @@ export function createDancer(host, opts = {}) {
       if (c !== lastCount) { lastCount = c; onCount && onCount(c, t); }
     }
     apply(poseAtTime(t));
+    if (trailsOn) sampleTrails();
     controls.update();
     renderer.render(scene, cam);
     requestAnimationFrame(frame);
@@ -278,7 +305,7 @@ export function createDancer(host, opts = {}) {
   frame();
 
   return {
-    setSequence(s) { seq = s; t = Math.min(t, Math.max(totalLen() - 0.001, 0)); lastCount = -1; },
+    setSequence(s) { seq = s; t = Math.min(t, Math.max(totalLen() - 0.001, 0)); lastCount = -1; clearTrails(); },
     play() { playing = true; lastCount = -1; clock.getDelta(); },
     pause() { playing = false; },
     get playing() { return playing; },
@@ -296,6 +323,10 @@ export function createDancer(host, opts = {}) {
       const v = new THREE.Vector3(...(dirs[name] || dirs.front)).normalize().multiplyScalar(d);
       cam.position.copy(controls.target).add(v);
     },
+    setTrails(v) { trailsOn = v; trailPts.visible = v; if (!v) clearTrails(); },
+    clearTrails,
+    // render one pose now and return it as a picture (used for the drawn move cards)
+    snapshot(id, at) { seq = [{ id, start: 0, len: MOVE_BY_ID[id].len }]; t = at; apply(poseAtTime(t)); controls.update(); renderer.render(scene, cam); return renderer.domElement.toDataURL('image/png'); },
     dispose() { alive = false; ro.disconnect(); renderer.dispose(); renderer.domElement.remove(); },
   };
 }

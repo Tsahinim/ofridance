@@ -22,11 +22,11 @@ for ch in word:
         fx=x+10
         # figure in SVG coords: y=0 cap top, y=CAP baseline. A leaping dancer: head, arched torso, kicked leg, raised arm
         s=stem
-        fig=f'''<g transform="translate({fx},0)" fill="none" stroke="currentColor" stroke-width="{s:.0f}" stroke-linecap="round" stroke-linejoin="round">
-<circle cx="356" cy="-92" r="{s*0.62:.0f}" fill="currentColor" stroke="none"/>
-<path d="M372 {s/2+20:.0f} C 366 240, 356 420, 346 {CAP-s/2:.0f}"/>
-<path d="M362 310 C 280 300, 150 240, {s/2+4:.0f} 130"/>
-<path d="M382 112 C 446 84, 500 10, {580-s/2:.0f} -140"/>
+        fig=f'''<g transform="translate({fx},0)" class="lg-dancer" fill="none" stroke="currentColor" stroke-width="{s:.0f}" stroke-linecap="round" stroke-linejoin="round">
+<circle class="lg-head" cx="356" cy="-92" r="{s*0.62:.0f}" fill="currentColor" stroke="none"/>
+<path class="lg-body" d="M372 {s/2+20:.0f} C 366 240, 356 420, 346 {CAP-s/2:.0f}"/>
+<path class="lg-leg" d="M362 310 C 280 300, 150 240, {s/2+4:.0f} 130"/>
+<path class="lg-arm" d="M382 112 C 446 84, 500 10, {580-s/2:.0f} -140"/>
 </g>'''
         x+=w+TRACK
         continue

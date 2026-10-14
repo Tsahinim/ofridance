@@ -1,5 +1,8 @@
 // OFRIDANCE — eight-count builder: place moves on counts, hear the beat, watch the 3D dancer perform the phrase.
 import { createDancer, MOVES, MOVE_BY_ID } from './dancer3d.js';
+import { moveThumbs } from './thumbs.js';
+const pulse = (el) => { if (!el) return; el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); };
+
 
 const app = document.getElementById('counts-app');
 if (app) init(app);
@@ -16,7 +19,7 @@ function init(app) {
   const h = location.hash.match(/p=([^&]+)/);
   if (h) { try { state = JSON.parse(decodeURIComponent(atob(h[1]))); } catch (e) {} }
   if (!state || !Array.isArray(state.items)) state = JSON.parse(JSON.stringify(SAMPLES.hiphop));
-  let eight = 0, selSlot = 0, tab = state.style || 'hiphop', counting = false;
+  let eight = 0, selSlot = 0, tab = state.style || 'hiphop', counting = false, thumbs = {};
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
 
   const dancer = createDancer($('.viewport'), { background: '#141414' });
@@ -78,7 +81,7 @@ function init(app) {
     const list = $('.move-list'); list.innerHTML = '';
     MOVES.filter((m) => m.style === tab).forEach((m) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'move-card';
-      b.innerHTML = `<b>${m.name} <bdi class="en" style="font-weight:400;color:#9a9a9a">${m.en}</bdi></b><span><span class="len">${m.len} ${m.len === 1 ? 'ספירה' : 'ספירות'}</span> · ${m.tip}</span>`;
+      b.innerHTML = `<img class="mv-thumb" alt="" ${thumbs[m.id] ? `src="${thumbs[m.id]}"` : ''}><span class="mv-text"><b>${m.name} <bdi class="en" style="font-weight:400;color:#9a9a9a">${m.en}</bdi></b><span><span class="len">${m.len} ${m.len === 1 ? 'ספירה' : 'ספירות'}</span> · ${m.tip}</span></span>`;
       b.addEventListener('click', () => place(m));
       list.appendChild(b);
     });
@@ -112,13 +115,13 @@ function init(app) {
     const step = () => {
       if (!counting) return;
       if (k === 4) return go();
-      $('.big-count').textContent = 5 + k; $('.now-move').textContent = 'מוכנות…'; beat(4 + k); speak(4 + k); k++;
+      $('.big-count').textContent = 5 + k; pulse($('.big-count')); $('.now-move').textContent = 'מוכנות…'; beat(4 + k); speak(4 + k); k++;
       setTimeout(step, beatMs);
     };
     step();
   });
   dancer.onCount((c) => {
-    const n = c % 8; $('.big-count').textContent = n + 1; beat(c); speak(n);
+    const n = c % 8; $('.big-count').textContent = n + 1; pulse($('.big-count')); beat(c); speak(n);
     const it = itemAt(c); $('.now-move').textContent = it ? MOVE_BY_ID[it.id].name : '';
     eight = Math.floor(c / 8); renderTabs(); renderSlots(c);
   });
@@ -137,6 +140,8 @@ function init(app) {
   });
   function flash(msg) { const o = document.querySelector('.flash'); if (!o) return; o.textContent = msg; o.classList.add('on'); clearTimeout(o._t); o._t = setTimeout(() => o.classList.remove('on'), 3200); }
 
+  $('#trails').addEventListener('change', (e) => dancer.setTrails(e.target.checked));
+  moveThumbs().then((t) => { thumbs = t; renderMoves(); }).catch(() => {});
   renderAll();
   dancer.setBpm(state.bpm);
   dancer.setSequence(seqFor());
