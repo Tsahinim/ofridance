@@ -52,28 +52,38 @@ function loadModel(name) {
   return models[src];
 }
 
-// skin and cloth are solid; hair, brows and lashes are cut-outs (sorted blending would flicker on a moving body)
-function tuneMaterial(m) {
-  const n = (m.name || '').toLowerCase();
-  const cutout = /hair|ponytail|bun|braid|eyebrow|eyelash/.test(n);
+// skin and cloth are solid; hair, brows, lashes and the clear cover of the eyes are cut-outs
+// (sorted blending would flicker on a moving body)
+function tuneMaterial(src) {
+  const n = (src.name || '').toLowerCase();
+  const cutout = /hair|ponytail|bun|braid|eyebrow|eyelash|high-poly|low-poly/.test(n);
+  let m = src;
+  if (/body/.test(n)) {
+    // skin: a soft sheen at the edges stands in for light passing under the skin, and a gentle, broad highlight
+    m = new THREE.MeshPhysicalMaterial({ map: src.map, name: src.name, roughness: 0.52, metalness: 0,
+      sheen: 0.35, sheenRoughness: 0.55, sheenColor: new THREE.Color(1, 0.55, 0.45), specularIntensity: 0.45 });
+    m.color.setRGB(1, 0.86, 0.74);
+  } else if (/high-poly|low-poly/.test(n)) {
+    // eyes: wet and glossy, so they catch the light like real eyes
+    m = new THREE.MeshPhysicalMaterial({ map: src.map, name: src.name, roughness: 0.18, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.05 });
+  } else {
+    m.roughness = Math.max(0.75, m.roughness ?? 0.8); m.metalness = 0;
+  }
   m.transparent = false; m.depthWrite = true;
   m.alphaTest = cutout ? 0.45 : 0;
   m.side = cutout ? THREE.DoubleSide : THREE.FrontSide;
   // one dancer in both outfits: the same warm skin and the same dark-brown hair
-  if (/bun|braid/.test(n)) m.color.setRGB(0.24, 0.16, 0.12);
-  if (/ponytail/.test(n)) m.color.setRGB(0.78, 0.62, 0.52);
+  if (/hair_bun/.test(n)) m.color.setRGB(0.36, 0.3, 0.28);
   if (/crop_top/.test(n)) m.color.setRGB(0.74, 0.74, 0.74);
-  if (/body/.test(n)) { m.color.setRGB(1, 0.86, 0.74); m.roughness = 0.62; m.metalness = 0; }
-  else if (/eye/.test(n) && !cutout) { m.roughness = 0.25; }
-  else { m.roughness = Math.max(0.75, m.roughness ?? 0.8); m.metalness = 0; }
   m.envMapIntensity = 0.55;
+  return m;
 }
 
 async function buildRig(name) {
   const gltf = await loadModel(name);
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
   const root = clone(gltf.scene);
-  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = o.material.clone(); tuneMaterial(o.material); } });
+  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = tuneMaterial(o.material.clone()); } });
   const bones = {};
   root.traverse((o) => { if (o.isBone) bones[o.name.replace(/^mixamorig:?/, '')] = o; });
   // normalise height to 1.66 m, feet on the floor
@@ -209,10 +219,10 @@ export function createViewer(host, { background = '#111111' } = {}) {
   // soft light from every side, as in a studio with white walls, so skin and cloth read as real materials
   const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.55;
   scene.fog = new THREE.Fog(background, 9, 22);
-  scene.add(new THREE.HemisphereLight('#ffffff', '#4a4a4a', 1.1));
-  const key = new THREE.DirectionalLight('#fff4e8', 2.4); key.position.set(2.5, 5, 4); key.castShadow = true;
+  scene.add(new THREE.HemisphereLight('#ffffff', '#3a3a3a', 0.6));
+  const key = new THREE.DirectionalLight('#fff1e2', 3.2); key.position.set(2.5, 5, 4); key.castShadow = true;
   key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 4; key.shadow.bias = -0.0004; Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); scene.add(key); scene.add(key.target);
-  const fill = new THREE.DirectionalLight('#ffffff', 0.8); fill.position.set(-3, 2, 3); scene.add(fill);
+  const fill = new THREE.DirectionalLight('#e8f0ff', 0.7); fill.position.set(-3, 2, 3); scene.add(fill);
   const rim = new THREE.DirectionalLight('#ff5a4c', 1.6); rim.position.set(-3, 3.5, -4); scene.add(rim);
   // a pool of light on a dark stage floor
   const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
