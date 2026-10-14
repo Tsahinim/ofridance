@@ -77,7 +77,7 @@
 .counts-app { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; padding: 8px; background: var(--night); color: #fff; }
 .counts-app .viewport { position: relative; background: #141414; min-height: 30rem; }
 .counts-app .viewport canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
-.counts-app .side { display: grid; gap: 8px; align-content: start; }
+.counts-app .side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-content: start; min-width: 0; }
 .eight-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; background: #121212; padding: 8px; }
 .slot { min-height: 5.5rem; background: #1f1f1f; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; position: relative; text-align: start; }
 .slot .n { font-size: 1.5rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; color: #9a9a9a; }
@@ -102,7 +102,7 @@
 .count-hud { position: absolute; top: 12px; inset-inline-start: 14px; pointer-events: none; }
 .count-hud .big-count { font-size: clamp(4rem, 9vw, 8rem); }
 .count-hud .now-move { font-size: 1.125rem; margin-top: 0.3rem; }
-@media (max-width: 62em) { .counts-app { grid-template-columns: 1fr; } .counts-app .viewport { min-height: 24rem; } .eight-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 62em) { .counts-app { grid-template-columns: minmax(0, 1fr); } .counts-app .side { min-width: 0; } .counts-app .viewport { min-height: 24rem; } .eight-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
 /* dancer explorer */
 .dancer-app { display: grid; grid-template-columns: 20rem minmax(0, 1fr); gap: 8px; padding: 8px; background: var(--night); color: #fff; }
@@ -290,3 +290,12 @@
 .app-promo .button { justify-self: start; }
 @media (hover: hover) { .app-promo:hover .button { background: var(--red-deep); } }
 @media (max-width: 52em) { .app-promo { grid-template-columns: 1fr; } }
+
+/* eight-count builder with the real dancer */
+.counts-app .viewport { position: relative; }
+.counts-app .viewport canvas { display: block; }
+.counts-app .viewport.mirrored canvas { transform: scaleX(-1); }
+.counts-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #bdbdbd; font-size: 1rem; pointer-events: none; }
+.counts-app .move-group { margin: 0.9rem 0 0.35rem; font-size: 0.85rem; color: #ff5a4f; font-weight: 500; grid-column: 1 / -1; }
+.counts-app .move-list .move-card { grid-template-columns: 1fr; }
+.counts-app .tabs-gap { flex: 0 0 0.75rem; }

@@ -24,16 +24,16 @@
           <button id="play" class="button" type="button" aria-pressed="false">נגן עם ספירה</button>
           <label>סגנון <select id="style" style="min-height:2.75rem;background:#232323;border:0;padding:0 .5rem"><option value="hiphop">היפ הופ</option><option value="modern">מודרני</option></select></label>
           <label>קצב <input id="bpm" type="range" min="60" max="140" value="96"> <output id="bpm-out">96</output></label>
+          <label>אורך תנועה <select id="len" style="min-height:2.75rem;background:#232323;border:0;padding:0 .5rem"><option value="4">4 ספירות</option><option value="8" selected>8 ספירות</option><option value="16">16 ספירות</option></select></label>
           <label><input id="countin" type="checkbox" checked> 5, 6, 7, 8 לפני</label>
           <label><input id="beat" type="checkbox" checked> ביט</label>
           <label><input id="voice" type="checkbox"> ספירה בקול</label>
           <label><input id="mirror" type="checkbox"> מראה</label>
-          <label class="trails-toggle"><input id="trails" type="checkbox"> קווי תנועה</label>
         </div>
         <div class="transport eight-tabs" aria-label="שמיניות במשפט"></div>
         <div class="eight-grid" aria-label="שמונה ספירות"></div>
         <div class="moves">
-          <div class="tabs"><button class="chip" type="button" data-tab="hiphop">תנועות היפ הופ</button><button class="chip" type="button" data-tab="modern">תנועות מודרני</button></div>
+          <div class="tabs"><button class="chip" type="button" data-tab="hiphop">תנועות היפ הופ</button><button class="chip" type="button" data-tab="modern">תנועות מודרני</button><span class="tabs-gap" aria-hidden="true"></span><button class="chip" type="button" data-lv="0">כל הרמות</button><button class="chip" type="button" data-lv="1">צעד ראשון</button><button class="chip" type="button" data-lv="2">צריך תרגול</button><button class="chip" type="button" data-lv="3">מתקדם</button></div>
           <div class="move-list"></div>
         </div>
         <div class="transport">
@@ -76,9 +76,10 @@
   <section id="use" class="chapter wrap" aria-labelledby="use-h">
     <header><h2 id="use-h">איך משתמשים</h2></header>
     <div class="body">
-      <p>לוחצים על ספירה ריקה, ואז על תנועה מהרשימה. התנועה תופסת את מספר הספירות שלה: באונס תופס שתיים, צעד צד ארבע. הרקדנית מדגימה מיד את התנועה מאותה ספירה.</p>
-      <p>"נגן עם ספירה" מנגן את כל המשפט עם ביט, אחרי ספירת "חמש, שש, שבע, שמונה". אפשר להוסיף עד ארבע שמיניות, כלומר משפט של 32 ספירות.</p>
-      <p>גוררים על הרקדנית כדי לסובב אותה ולראות את התנועה מהצד או מאחור. "מראה" הופך את הצדדים, כמו שרואים מורה שעומדת מולכן בסטודיו.</p>
+      <p>לוחצים על ספירה ריקה, בוחרים כמה ספירות התנועה תתפוס (ארבע, שמונה או שש עשרה), ואז לוחצים על תנועה מהרשימה. הרקדנית מדגימה אותה מיד, בלולאה, בקצב של המשפט.</p>
+      <p>כל התנועות ברשימה הן הקלטות של רקדנים אמיתיים, עם השם המקצועי שלהן ודרגת קושי. תנועות הרחוב והג׳אז הוקלטו על מוזיקה בקצב ידוע, ולכן הן מואטות או מואצות כך שינחתו בדיוק על הספירות שלכן. משפטי המחול המודרני מנוגנים במהירות המקורית שלהם.</p>
+      <p>"נגן עם ספירה" מנגן את כל המשפט עם ביט, אחרי ספירת "חמש, שש, שבע, שמונה". אפשר להוסיף עד שמונה שמיניות, כלומר משפט של 64 ספירות. בין תנועה לתנועה הרקדנית עוברת בהחלקה, והמשפט נע על הבמה כמו ריקוד אחד.</p>
+      <p>גוררים על הרקדנית כדי להסתובב סביבה ולראות את התנועה מהצד או מאחור. "מראה" הופך את הצדדים, כמו שרואים מורה שעומדת מולכן בסטודיו.</p>
       <p>רוצות ללמוד תנועה לאט? ב<a class="link" href="dancer.html">דף הרקדנית בתלת-ממד</a> כל תנועה מוסברת, ואפשר להאט אותה עד רבע מהמהירות.</p>
     </div>
   </section>

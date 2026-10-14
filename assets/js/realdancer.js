@@ -200,8 +200,21 @@ export async function createRealDancer(opts = {}) {
     pose(0);
     return c;
   }
+  // switch to a clip that setClip has already prepared, inside one animation frame (for phrases built from several moves)
+  function useClip(c) {
+    const fit = c && rig.fitCache.get(c); if (!fit) return false;
+    clip = c; k = legLen / c.leg; floor = fit.floor; offsets = fit.offsets; c.fit = fit;
+    return true;
+  }
+  // soften the cut between two moves: remember the body now, then ease from it into the new pose
+  function snapshot() { return rest.map((r) => [r.b.quaternion.clone(), r.b.position.clone()]); }
+  function blend(snap, w) {
+    if (!snap || w >= 1) return;
+    rest.forEach((r, i) => { r.b.quaternion.slerpQuaternions(snap[i][0], r.b.quaternion.clone(), w); if (i === 0) r.b.position.y = snap[i][1].y + (r.b.position.y - snap[i][1].y) * w; });
+    root.updateMatrixWorld(true);
+  }
   await setOutfit(opts.outfit || 'hiphop');
-  return { root: holder, get bones() { return bones; }, setClip, pose, setOutfit, get outfit() { return outfit; }, get clip() { return clip; },
+  return { root: holder, get bones() { return bones; }, setClip, useClip, snapshot, blend, pose, setOutfit, get outfit() { return outfit; }, get clip() { return clip; },
     get hipRest() { return rig.hipRest; }, hips: () => wp('Hips') };
 }
 

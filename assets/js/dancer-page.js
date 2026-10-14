@@ -117,4 +117,6 @@ async function init(app) {
   const hash = decodeURIComponent(location.hash.slice(1));
   const startId = MOVE_BY_ID[hash] ? hash : LEGACY[hash] || 'gMH-07';
   renderList(); select(startId);
+  // the site menu links straight to a move; follow it when the page is already open
+  addEventListener('hashchange', () => { const h = decodeURIComponent(location.hash.slice(1)); const id = MOVE_BY_ID[h] ? h : LEGACY[h]; if (id && id !== current) select(id); });
 }
