@@ -88,7 +88,7 @@ export function renderStage(svg, prod, ui) {
     const fill = q.color || p.color || '#ef4b3f';
     if (p.kind === 'circle') el('ellipse', { rx: w / 2, ry: h / 2, fill, 'fill-opacity': 0.9, stroke: sel ? '#fff' : 'none', 'stroke-width': 3 }, grp);
     else el('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: p.kind === 'rounded' ? Math.min(w, h) * 0.3 : 3, fill, 'fill-opacity': 0.9, stroke: sel ? '#fff' : 'none', 'stroke-width': 3 }, grp);
-    if (p.label) { const t = el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': 14, fill: '#fff', direction: 'rtl' }, grp); t.textContent = p.label; }
+    if (p.label && w > p.label.length * 8 + 6) { const t = el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': 14, fill: '#fff', direction: 'rtl' }, grp); t.textContent = p.label; }
     if (sel && ui.editing) el('circle', { class: 'prop-size', cx: w / 2, cy: -h / 2, r: 9, fill: '#fff', stroke: C.red, 'stroke-width': 3 }, grp);
   }
 

@@ -175,7 +175,7 @@ function boot(app) {
     $('.chg-title').textContent = ch.title;
     if (player) { player.dispose(); player = null; }
     if (ch.music && ch.music.kind === 'youtube') loadYT(ch.music.ytId, true);
-    renderAll(); requestAnimationFrame(() => { scrollToTime(0); });
+    renderAll(); requestAnimationFrame(() => { scrollToTime(0); }); setTimeout(() => tips(false), 400);
   }
   const save = () => { if (ch && !db.save(ch)) toast('הדפדפן מלא. מחקו כוריאוגרפיות ישנות.'); };
   const snap = () => { undo.push(JSON.stringify(ch)); if (undo.length > 120) undo.shift(); redo = []; };
@@ -231,7 +231,7 @@ function boot(app) {
     if (mode3d) mode3d.update(ch, live ? r.pos : f.pos, live ? r.props : f.props);
     selBar();
   }
-  function renderAll() { timeline(); draw(); }
+  function renderAll() { timeline(); draw(); if (!pal.hidden) palette(); }
 
   // ---------- the timeline: formation blocks and transitions, playhead in the middle ----------
   const strip = $('.chg-strip'), tl = $('.chg-tl');
@@ -239,8 +239,9 @@ function boot(app) {
     const L = F().length; let h = '<div class="chg-pad"></div>';
     F().forEach((f, i) => {
       const on = i === fi;
-      h += `<button type="button" class="chg-block${on ? ' on' : ''}" data-f="${i}" style="width:${Math.max(28, f.dur * PX * zoom)}px" aria-label="${esc(f.name)}, ${f.dur.toFixed(2)} שניות">${miniStage(ch, f.pos, { r: 3 })}<span>${esc(f.name)}</span>${on ? '<i class="h hl" data-h="dur-start"></i><i class="h hr" data-h="dur"></i>' : ''}</button>`;
-      if (i < L - 1) h += `<button type="button" class="chg-trans${on || fi === i + 1 ? ' near' : ''}" data-t="${i}" style="width:${Math.max(18, f.trans * PX * zoom)}px" aria-label="מעבר של ${f.trans.toFixed(2)} שניות">${xShape()}${on ? '<i class="h hr" data-h="trans"></i>' : ''}</button>`;
+      const s0 = startOf(i);
+      h += `<button type="button" class="chg-block${on ? ' on' : ''}" data-f="${i}" style="width:${Math.max(28, f.dur * PX * zoom)}px" aria-label="${esc(f.name)}, ${f.dur.toFixed(2)} שניות">${miniStage(ch, f.pos, { r: 3 })}<span>${esc(f.name)}</span>${on ? `<i class="h hl" data-h="dur-start"></i><i class="h hr" data-h="dur"></i><em class="tlab te">${fmtT(s0 + f.dur)}</em>` : ''}</button>`;
+      if (i < L - 1) h += `<button type="button" class="chg-trans${on || fi === i + 1 ? ' near' : ''}" data-t="${i}" style="width:${Math.max(18, f.trans * PX * zoom)}px" aria-label="מעבר של ${f.trans.toFixed(2)} שניות">${xShape()}${on ? `<i class="h hr" data-h="trans"></i><em class="tlab te">${fmtT(s0 + f.dur + f.trans)}</em>` : ''}</button>`;
     });
     h += `<button type="button" class="chg-add" aria-label="מערך חדש">${icon('plus')}</button><div class="chg-pad"></div>`;
     strip.innerHTML = h;
@@ -472,18 +473,74 @@ function boot(app) {
   }
 
   // ---------- dancers: the palette, adding, the dancer card ----------
-  $('#chg-dancers').addEventListener('click', () => {
+  // ---------- the palette beside the stage: dancers and props, tap to add or drag onto the stage ----------
+  const pal = $('.chg-palette');
+  let palTab = 'dancers';
+  function palette(tab) {
+    if (tab) palTab = tab;
+    const open = !pal.hidden, f = F()[fi];
+    $('#chg-dancers').setAttribute('aria-pressed', open && palTab === 'dancers'); $('#chg-props').setAttribute('aria-pressed', open && palTab === 'props');
+    if (!open) return;
+    pal.querySelectorAll('[data-ptab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.ptab === palTab));
+    const body = pal.querySelector('.chg-pal-body');
+    if (palTab === 'dancers') {
+      body.innerHTML = `<div class="chg-tiles">${ch.dancers.map((d) => `<button type="button" class="chg-tile${f.pos[d.id] ? ' on' : ''}" data-d="${d.id}" title="לחיצה: להעלות או לבחור. גרירה: למקם על הבמה. לחיצה כפולה: עריכה"><i style="background:${d.color}">${esc(d.num || '')}</i><span>${esc(d.name)}</span><small>${f.pos[d.id] ? 'על הבמה' : 'לא במערך'}</small></button>`).join('')}</div>
+        <div class="chg-pal-actions"><button type="button" class="chg-btn chg-primary" data-new>+ רקדנית</button><button type="button" class="chg-btn" data-all>כולן למערך</button><button type="button" class="chg-btn" data-crew>שמירה כצוות</button></div>`;
+      body.querySelectorAll('[data-d]').forEach((b) => { dragTile(b, { dancer: b.dataset.d }); b.addEventListener('dblclick', () => dancerSheet(b.dataset.d)); });
+      body.querySelector('[data-all]').addEventListener('click', () => { snap(); ch.dancers.forEach((d) => { if (!f.pos[d.id]) f.pos[d.id] = freeSpot(f); }); renderAll(); palette(); save(); });
+      body.querySelector('[data-new]').addEventListener('click', () => { snap(); const n = ch.dancers.length; const d = { id: 'd' + uid(), name: NAMES[n % NAMES.length], color: COLORS[n % COLORS.length], num: String(n + 1) }; ch.dancers.push(d); F().forEach((x) => { x.pos[d.id] = freeSpot(x); }); sel = new Set([d.id]); renderAll(); palette(); save(); dancerSheet(d.id); });
+      body.querySelector('[data-crew]').addEventListener('click', () => { const name = prompt('שם הצוות:', ch.title); if (!name) return; const crews = db.crews(); crews.push({ name, dancers: ch.dancers.map((d) => ({ name: d.name, color: d.color })) }); db.setCrews(crews); toast('הצוות נשמר בספרייה.'); });
+    } else {
+      const shapes = [['square', 'ריבוע', '<rect x="8" y="8" width="24" height="24" rx="2"/>'], ['rounded', 'מעוגל', '<rect x="12" y="6" width="16" height="28" rx="6"/>'], ['circle', 'עיגול', '<circle cx="20" cy="20" r="13"/>'], ['wide', 'מלבן', '<rect x="5" y="13" width="30" height="14" rx="3"/>'], ['chair', 'כיסא', '<rect x="12" y="12" width="16" height="16" rx="2"/>'], ['podium', 'במה מוגבהת', '<rect x="7" y="10" width="26" height="20" rx="2"/>'], ['table', 'שולחן', '<rect x="5" y="14" width="30" height="12" rx="2"/>'], ['wall', 'קיר תפאורה', '<rect x="3" y="17" width="34" height="6" rx="1"/>']];
+      body.innerHTML = `<div class="chg-tiles chg-shapes">${shapes.map(([k, n, svgp]) => `<button type="button" data-k="${k}" title="לחיצה: להוסיף. גרירה: למקם על הבמה"><svg viewBox="0 0 40 40">${svgp}</svg>${n}</button>`).join('')}</div>
+        ${propsOut().length ? `<h3>מחוץ למערך הזה</h3><div class="chg-pal-actions">${propsOut().map((x) => `<button type="button" class="chg-btn" data-back="${x.id}">להחזיר: ${esc(x.label || 'פריט')}</button>`).join('')}</div>` : ''}
+        <p class="chg-hint">פריט נכנס לכל המערכים. בכל מערך אפשר להזיז אותו, לשנות גודל וצבע, או להוציא אותו, והוא זז במעבר.</p>`;
+      body.querySelectorAll('[data-k]').forEach((b) => dragTile(b, { prop: b.dataset.k }));
+      body.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { snap(); const id = b.dataset.back, src = F().map((x) => (x.props || {})[id]).find(Boolean); f.props = f.props || {}; f.props[id] = src ? clone(src) : { x: 0, y: ch.stage.d / 2, w: 1, h: 1, r: 0, color: COLORS[0] }; draw(); palette(); save(); }));
+    }
+  }
+  pal.querySelectorAll('[data-ptab]').forEach((b) => b.addEventListener('click', () => palette(b.dataset.ptab)));
+  pal.querySelector('[data-pclose]').addEventListener('click', () => { pal.hidden = true; palette(); });
+  const togglePal = (tab) => { if (!pal.hidden && palTab === tab) pal.hidden = true; else pal.hidden = false; palette(tab); };
+  $('#chg-dancers').addEventListener('click', () => togglePal('dancers'));
+  $('#chg-props').addEventListener('click', () => togglePal('props'));
+  // a tile: a tap adds it, a drag places it exactly where it is dropped on the stage
+  function dragTile(tile, what) {
+    tile.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      const x0 = e.clientX, y0 = e.clientY; let ghost = null;
+      const move = (ev) => {
+        if (!ghost && Math.hypot(ev.clientX - x0, ev.clientY - y0) > 6) {
+          ghost = document.createElement('div'); ghost.className = 'chg-ghost';
+          if (what.dancer) { const d = ch.dancers.find((x) => x.id === what.dancer); ghost.style.background = d.color; ghost.textContent = d.num || ''; } else ghost.classList.add('prop');
+          document.body.appendChild(ghost);
+        }
+        if (ghost) { ghost.style.left = ev.clientX + 'px'; ghost.style.top = ev.clientY + 'px'; }
+      };
+      const up = (ev) => {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        const r = svg.getBoundingClientRect(), onStage = ghost && ev.clientX >= r.left && ev.clientX <= r.right && ev.clientY >= r.top && ev.clientY <= r.bottom;
+        if (ghost) ghost.remove();
+        if (ghost && !onStage) return;
+        const at = onStage ? ptM(ev).map((v) => roundTo(v, (ch.stage.grid || 1) / 4)) : null;
+        if (what.dancer) placeDancer(what.dancer, at); else addProp(what.prop, at);
+      };
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+    });
+  }
+  function placeDancer(id, at) {
     const f = F()[fi];
-    const s = sheet('chg-dancers-sheet', `<h2>רקדניות</h2><p class="chg-hint">לוחצים על רקדנית שלא על הבמה כדי להעלות אותה למערך הזה. לחיצה כפולה על רקדנית על הבמה פותחת את הכרטיס שלה.</p>
-      <div class="chg-tiles">${ch.dancers.map((d) => `<button type="button" class="chg-tile${f.pos[d.id] ? ' on' : ''}" data-d="${d.id}"><i style="background:${d.color}"></i><span>${esc(d.name)}</span><small>${f.pos[d.id] ? 'על הבמה' : 'לא במערך'}</small></button>`).join('')}</div>
-      <div class="chg-actions"><button type="button" class="chg-btn chg-primary" data-new>+ רקדנית חדשה</button><button type="button" class="chg-btn" data-all>כולן למערך</button><button type="button" class="chg-btn" data-crew>שמירה כצוות</button><button type="button" class="chg-btn" data-x>סגירה</button></div>`);
-    s.querySelector('[data-x]').addEventListener('click', () => s.close());
-    s.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => { const id = b.dataset.d; if (f.pos[id]) { sel = new Set([id]); s.close(); draw(); return; } snap(); f.pos[id] = freeSpot(f); s.close(); sel = new Set([id]); renderAll(); save(); }));
-    s.querySelector('[data-all]').addEventListener('click', () => { snap(); ch.dancers.forEach((d) => { if (!f.pos[d.id]) f.pos[d.id] = freeSpot(f); }); s.close(); renderAll(); save(); });
-    s.querySelector('[data-new]').addEventListener('click', () => { snap(); const n = ch.dancers.length; const d = { id: 'd' + uid(), name: NAMES[n % NAMES.length], color: COLORS[n % COLORS.length], num: String(n + 1) }; ch.dancers.push(d); F().forEach((x) => { x.pos[d.id] = freeSpot(x); }); s.close(); sel = new Set([d.id]); renderAll(); save(); dancerSheet(d.id); });
-    s.querySelector('[data-crew]').addEventListener('click', () => { const name = prompt('שם הצוות:', ch.title); if (!name) return; const crews = db.crews(); crews.push({ name, dancers: ch.dancers.map((d) => ({ name: d.name, color: d.color })) }); db.setCrews(crews); toast('הצוות נשמר בספרייה.'); });
-    s.showModal();
-  });
+    if (f.pos[id] && !at) { sel = new Set([id]); draw(); return; }
+    if (!editable()) { t = startOf(fi); scrollToTime(t); }
+    snap(); f.pos[id] = at || freeSpot(f); sel = new Set([id]); renderAll(); palette(); save();
+  }
+  function addProp(k, at) {
+    snap(); const size = { square: [1, 1], rounded: [0.6, 1.2], circle: [1, 1], wide: [2, 0.7], chair: [0.5, 0.5], podium: [2, 1.5], table: [1.6, 0.8], wall: [4, 0.25] }[k];
+    const pr = { id: 'p' + uid(), kind: k === 'rounded' || k === 'circle' ? k : 'rect', label: { chair: 'כיסא', podium: 'במה מוגבהת', table: 'שולחן', wall: 'קיר' }[k] || '' };
+    ch.props.push(pr); const color = ['#ef4b3f', '#3a7bd5', '#8a6d5a', '#7ed957', '#b388ff'][(ch.props.length - 1) % 5];
+    F().forEach((f) => { f.props = f.props || {}; f.props[pr.id] = { x: at ? at[0] : 0, y: at ? at[1] : roundTo(ch.stage.d * 0.75, 0.5), w: size[0], h: size[1], r: 0, color }; });
+    selProp = pr.id; sel.clear(); draw(); palette(); save();
+  }
   function freeSpot(f) { const y = roundTo(ch.stage.d / 2, 0.5), taken = Object.values(f.pos); for (let k = 0; k < 40; k++) { const x = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.75; if (!taken.some((p) => Math.hypot(p[0] - x, p[1] - y) < 0.6)) return [x, y]; } return [0, y]; }
   function dancerSheet(id) {
     const d = ch.dancers.find((x) => x.id === id); if (!d) return;
@@ -501,22 +558,6 @@ function boot(app) {
   }
 
   // ---------- props ----------
-  $('#chg-props').addEventListener('click', () => {
-    const s = sheet('chg-props-sheet', `<h2>תפאורה</h2><p class="chg-hint">פריט נוסף לכל המערכים. בכל מערך אפשר להזיז אותו, לשנות גודל וצבע, והוא זז במעבר.</p>
-      <div class="chg-tiles chg-shapes"><button type="button" data-k="square"><svg viewBox="0 0 40 40"><rect x="8" y="8" width="24" height="24" rx="2"/></svg>ריבוע</button><button type="button" data-k="rounded"><svg viewBox="0 0 40 40"><rect x="12" y="6" width="16" height="28" rx="6"/></svg>מעוגל</button><button type="button" data-k="circle"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="13"/></svg>עיגול</button><button type="button" data-k="wide"><svg viewBox="0 0 40 40"><rect x="5" y="13" width="30" height="14" rx="3"/></svg>מלבן</button>
-      <button type="button" data-k="chair"><svg viewBox="0 0 40 40"><rect x="12" y="12" width="16" height="16" rx="2"/></svg>כיסא</button><button type="button" data-k="podium"><svg viewBox="0 0 40 40"><rect x="7" y="10" width="26" height="20" rx="2"/></svg>במה מוגבהת</button><button type="button" data-k="table"><svg viewBox="0 0 40 40"><rect x="5" y="14" width="30" height="12" rx="2"/></svg>שולחן</button><button type="button" data-k="wall"><svg viewBox="0 0 40 40"><rect x="3" y="17" width="34" height="6" rx="1"/></svg>קיר תפאורה</button></div>
-      ${propsOut().length ? `<h3>מחוץ למערך הזה</h3><div class="chg-row">${propsOut().map((p) => `<button type="button" class="chg-btn" data-back="${p.id}">להחזיר: ${esc(p.label || 'פריט')}</button>`).join('')}</div>` : ''}
-      <div class="chg-actions"><button type="button" class="chg-btn" data-x>סגירה</button></div>`);
-    s.querySelector('[data-x]').addEventListener('click', () => s.close());
-    s.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', () => { snap(); const id = b.dataset.back, f = F()[fi], src = F().map((x) => (x.props || {})[id]).find(Boolean); f.props = f.props || {}; f.props[id] = src ? clone(src) : { x: 0, y: ch.stage.d / 2, w: 1, h: 1, r: 0, color: COLORS[0] }; s.close(); draw(); save(); }));
-    s.querySelectorAll('[data-k]').forEach((b) => b.addEventListener('click', () => {
-      snap(); const k = b.dataset.k, size = { square: [1, 1], rounded: [0.6, 1.2], circle: [1, 1], wide: [2, 0.7], chair: [0.5, 0.5], podium: [2, 1.5], table: [1.6, 0.8], wall: [4, 0.25] }[k];
-      const p = { id: 'p' + uid(), kind: k === 'rounded' || k === 'circle' ? k : 'rect', label: { chair: 'כיסא', podium: 'במה מוגבהת', table: 'שולחן', wall: 'קיר' }[k] || '' };
-      ch.props.push(p); F().forEach((f) => { f.props = f.props || {}; f.props[p.id] = { x: 0, y: roundTo(ch.stage.d * 0.75, 0.5), w: size[0], h: size[1], r: 0, color: ['#ef4b3f', '#3a7bd5', '#8a6d5a', '#7ed957', '#b388ff'][(ch.props.length - 1) % 5] }; });
-      selProp = p.id; sel.clear(); s.close(); draw(); save();
-    }));
-    s.showModal();
-  });
   function propsOut() { const f = F()[fi]; return ch.props.filter((p) => !(f.props || {})[p.id]); }
   function propSheet(id) {
     const p = ch.props.find((x) => x.id === id), q = F()[fi].props[id]; if (!p || !q) return;
@@ -562,11 +603,13 @@ function boot(app) {
       <fieldset><legend>הבמה (מטרים)</legend><div class="chg-row"><label>רוחב <input name="w" type="number" step="0.5" min="3" max="40" value="${st.w}"></label><label>עומק <input name="d" type="number" step="0.5" min="2" max="30" value="${st.d}"></label><label>צדדים <input name="side" type="number" step="0.25" min="0" max="6" value="${st.side}"></label><label>אחורי הבמה <input name="back" type="number" step="0.25" min="0" max="6" value="${st.back}"></label></div>
       <div class="chg-row"><label>גודל משבצת ברשת <select name="grid">${[0.5, 1, 2].map((v) => `<option value="${v}"${st.grid === v ? ' selected' : ''}>${v} מ׳</option>`).join('')}</select></label><label class="chg-check"><input type="checkbox" name="snap" ${st.snap !== false ? 'checked' : ''}> הצמדה לרשת</label></div></fieldset>
       <fieldset><legend>זמן</legend><div class="chg-row"><label>תצוגת זמן <select name="unit"><option value="sec"${ch.unit !== 'counts' ? ' selected' : ''}>שניות</option><option value="counts"${ch.unit === 'counts' ? ' selected' : ''}>שמיניות וספירות</option></select></label><label>קצב (פעמות לדקה) <input name="bpm" type="number" min="40" max="240" step="0.1" value="${bpm()}"></label></div></fieldset>
+      <div class="chg-row"><button type="button" class="chg-btn" data-tips>להראות שוב את הטיפים</button></div>
       <fieldset><legend>שליחה לרקדניות</legend><div class="chg-row"><button type="button" class="chg-btn" data-share>קישור לשיתוף</button><button type="button" class="chg-btn" data-video>סרטון</button><button type="button" class="chg-btn" data-pdf>חוברת להדפסה או PDF</button><button type="button" class="chg-btn" data-png>תמונה של המערך</button><button type="button" class="chg-btn" data-file>שמירה כקובץ</button></div></fieldset>
       <div class="chg-actions"><button type="button" class="chg-btn chg-primary" data-ok>שמירה</button><button type="button" class="chg-btn" data-x>ביטול</button></div>`);
     const v = (n) => s.querySelector(`[name="${n}"]`);
     s.querySelector('[data-x]').addEventListener('click', () => s.close());
     s.querySelector('[data-share]').addEventListener('click', share);
+    s.querySelector('[data-tips]').addEventListener('click', () => { s.close(); tips(true); });
     s.querySelector('[data-pdf]').addEventListener('click', () => { s.close(); printBook(); });
     s.querySelector('[data-png]').addEventListener('click', () => { s.close(); exportPng(); });
     s.querySelector('[data-file]').addEventListener('click', () => { const blob = new Blob([JSON.stringify(Object.assign(clone(ch), { music: ch.music && ch.music.kind === 'youtube' ? ch.music : null }))], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${ch.title}.ofridance.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('הקובץ נשמר. אפשר להעלות אותו לגוגל דרייב או לשלוח, ולפתוח בכל מכשיר דרך "פתיחת קובץ" במסך הבית.'); });
@@ -585,7 +628,8 @@ function boot(app) {
     const m = ch.music;
     const s = sheet('chg-music-sheet', `<h2>מוזיקה</h2><p class="chg-hint">${m ? `${esc(m.name || 'שיר')} · ${bpm()} פעמות לדקה` : 'בלי שיר, הזמן רץ בשניות והקליק סופר לפי הקצב.'}</p>
       <div class="chg-row"><label class="chg-btn chg-primary">העלאת שיר<input type="file" accept="audio/*" data-file hidden></label><button type="button" class="chg-btn" data-yt>קישור מיוטיוב</button><button type="button" class="chg-btn" data-demo>שיר לדוגמה</button>${m ? '<button type="button" class="chg-btn" data-clear>הסרת השיר</button>' : ''}</div>
-      ${m ? `<label>תחילת השיר בקטע (חיתוך, שניות) <input name="start" type="number" step="0.01" min="0" value="${(m.start || 0).toFixed(2)}"></label>` : ''}
+      ${m && m.peaks ? `<div class="chg-trim"><canvas aria-label="גל הקול של השיר: לחיצה או גרירה קובעת מאיפה הקטע מתחיל"></canvas><div class="chg-trim-l"><span data-a></span><span data-b></span></div></div>` : ''}
+      ${m ? `<label>תחילת הקטע בשיר (שניות) <input name="start" type="number" step="0.01" min="0" value="${(m.start || 0).toFixed(2)}"></label>` : ''}
       <div class="chg-row"><label>קצב <input name="bpm" type="number" min="40" max="240" step="0.1" value="${bpm()}"></label><button type="button" class="chg-btn" data-tap>הקישו בקצב</button></div>
       <p class="chg-hint" data-st role="status"></p><div class="chg-actions"><button type="button" class="chg-btn" data-x>סגירה</button></div>`);
     const st = (x) => (s.querySelector('[data-st]').textContent = x), taps = tapper();
@@ -599,7 +643,25 @@ function boot(app) {
     s.querySelector('[data-demo]').addEventListener('click', async () => { try { const r = await fetch('assets/audio/demo-beat-96.mp3'); useBlob(await r.blob(), 'ביט לדוגמה, 96'); } catch (e) { st('לא הצלחנו לטעון.'); } });
     s.querySelector('[data-yt]').addEventListener('click', () => { const u = prompt('הדביקו קישור ליוטיוב:'); const id = u && youtubeId(u); if (id) loadYT(id, false, st); else if (u) st('זה לא נראה כמו קישור ליוטיוב.'); });
     const cl = s.querySelector('[data-clear]'); if (cl) cl.addEventListener('click', () => { snap(); ch.music = null; if (player) { player.dispose(); player = null; } $('.chg-yt').hidden = true; save(); timeline(); s.close(); });
-    const sn = s.querySelector('[name="start"]'); if (sn) sn.addEventListener('change', () => { ch.music.start = Math.max(0, +sn.value || 0); save(); timeline(); });
+    const sn = s.querySelector('[name="start"]'); if (sn) sn.addEventListener('change', () => { ch.music.start = Math.max(0, +sn.value || 0); save(); timeline(); drawTrim(); });
+    const tc = s.querySelector('.chg-trim canvas');
+    const ts = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${(sec % 60).toFixed(2).padStart(5, '0')}`;
+    function drawTrim() {
+      if (!tc) return; const m2 = ch.music, w = tc.clientWidth || 400, hh = 70, dpr = Math.min(2, devicePixelRatio || 1); tc.width = w * dpr; tc.height = hh * dpr;
+      const g = tc.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, hh);
+      const dur = m2.duration || 1, a = (m2.start || 0) / dur * w, b = Math.min(w, ((m2.start || 0) + total()) / dur * w);
+      g.fillStyle = 'rgba(239,75,63,0.35)'; g.fillRect(a, 0, b - a, hh);
+      for (let x = 0; x < w; x += 2) { const v = (m2.peaks[Math.floor((x / w) * m2.peaks.length)] || 0) * hh * 0.45; g.fillStyle = x >= a && x <= b ? '#ffffff' : '#8b8e9e'; g.fillRect(x, hh / 2 - v, 1.4, v * 2 || 1); }
+      g.fillStyle = '#ef4b3f'; g.fillRect(a - 1.5, 0, 3, hh); g.fillRect(b - 1.5, 0, 3, hh);
+      s.querySelector('[data-a]').textContent = ts(m2.start || 0); s.querySelector('[data-b]').textContent = ts((m2.start || 0) + total());
+    }
+    if (tc) {
+      let dragging = false; const setFrom = (e) => { const r = tc.getBoundingClientRect(); ch.music.start = +clamp(((e.clientX - r.left) / r.width) * (ch.music.duration || 1), 0, Math.max(0, (ch.music.duration || 0) - 1)).toFixed(2); sn.value = ch.music.start.toFixed(2); drawTrim(); };
+      tc.addEventListener('pointerdown', (e) => { dragging = true; tc.setPointerCapture(e.pointerId); setFrom(e); });
+      tc.addEventListener('pointermove', (e) => { if (dragging) setFrom(e); });
+      tc.addEventListener('pointerup', () => { dragging = false; save(); timeline(); });
+      requestAnimationFrame(drawTrim);
+    }
     s.querySelector('[name="bpm"]').addEventListener('change', (e) => { const b = clamp(+e.target.value || 100, 40, 240); if (ch.music) ch.music.bpm = b; else ch.bpm = b; save(); pill(); });
     s.querySelector('[data-tap]').addEventListener('click', () => { const v = taps.tap(); if (v) { if (ch.music) ch.music.bpm = v; else ch.bpm = v; s.querySelector('[name="bpm"]').value = v; save(); st(`קצב: ${v}`); } else st(`עוד ${4 - taps.count} הקשות…`); });
     s.showModal();
@@ -641,6 +703,22 @@ function boot(app) {
   });
   $('#chg-full').addEventListener('click', () => { const el = app; if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(() => app.classList.toggle('full')); else app.classList.toggle('full'); });
 
+  // ---------- tips on the first visit (and again from the settings) ----------
+  const TIPS = [
+    ['גוררים רקדנית כדי להזיז אותה', 'קווי עזר אדומים מופיעים כשהיא מתיישרת עם רקדנית אחרת. גוררים מסגרת על חלק ריק כדי לבחור כמה יחד.'],
+    ['+ בציר הזמן מוסיף מערך', 'בוחרים מערך, ואז גוררים את הקצוות האדומים כדי לקבוע כמה זמן הוא נמשך וכמה זמן המעבר.'],
+    ['לחיצה על קו המסלול', 'בוחרים ישר, עקומה, קשת או נקודות, וגוררים את הנקודות הלבנות כדי לעקוף רקדניות אחרות.'],
+    ['נגן, מוזיקה ותלת-ממד', '▶ מנגן את כל המעברים. ♫ מוסיף שיר. הקובייה מציגה את הבמה בתלת-ממד.'],
+  ];
+  function tips(force) {
+    let seen = false; try { seen = localStorage.getItem('chg-tips') === '1'; } catch (e) {}
+    if (seen && !force) return;
+    let k = 0; const box = $('.chg-tip');
+    const show = () => { box.hidden = false; box.innerHTML = `<b>${TIPS[k][0]}</b><p>${TIPS[k][1]}</p><div><span>${k + 1} מתוך ${TIPS.length}</span><button type="button" class="chg-btn" data-skip>דילוג</button><button type="button" class="chg-btn chg-primary" data-next>${k < TIPS.length - 1 ? 'הבא' : 'הבנתי'}</button></div>`; box.querySelector('[data-next]').onclick = () => { k++; if (k >= TIPS.length) done(); else show(); }; box.querySelector('[data-skip]').onclick = done; };
+    const done = () => { box.hidden = true; try { localStorage.setItem('chg-tips', '1'); } catch (e) {} };
+    show();
+  }
+
   // ---------- keyboard ----------
   document.addEventListener('keydown', (e) => {
     if (!ch || app.dataset.screen !== 'editor' || e.target.closest('input, textarea, select, dialog')) return;
@@ -649,6 +727,9 @@ function boot(app) {
     if (mod && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); restore(redo, undo); return; }
     if (mod && k === 'a') { e.preventDefault(); sel = new Set(Object.keys(F()[fi].pos)); draw(); return; }
     if (e.code === 'Space') { e.preventDefault(); playing ? stop() : play(); return; }
+    if (!mod && k === 'n') { e.preventDefault(); addFormation(); return; }
+    if (mod && k === 'd' && !sel.size) { e.preventDefault(); duplicate(); return; }
+    if (e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { e.preventDefault(); stop(); fi = clamp(fi + (e.key === 'ArrowRight' ? 1 : -1), 0, F().length - 1); t = startOf(fi); sel.clear(); renderAll(); scrollToTime(t); return; }
     if (e.key === 'Escape') { sel.clear(); selProp = null; draw(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && selProp) { e.preventDefault(); snap(); ch.props = ch.props.filter((x) => x.id !== selProp); F().forEach((f) => f.props && delete f.props[selProp]); selProp = null; draw(); save(); return; }
     const a = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
