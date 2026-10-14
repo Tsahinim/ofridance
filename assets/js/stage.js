@@ -79,6 +79,8 @@ class StageView {
       el('rect', { x: x - (i === 4 ? 2 : 1), y: TOP + DEPTH + 6, width: i === 4 ? 4 : 2, height: 14, fill: i === 4 ? '#d92b21' : '#8a8a8a' }, floor);
       for (let r = 1; r < 5; r++) { const y = TOP + (r / 5) * DEPTH; el('circle', { cx: x, cy: y, r: 2, fill: '#4a4744' }, floor); }
     }
+    // the number line: distance from centre along the front, in metres, as on a real stage
+    this.numLine = el('g', { 'font-size': 13, fill: '#a09a94', 'text-anchor': 'middle' }, floor);
     // apron edge and the house
     el('rect', { x: 0, y: TOP + DEPTH + 24, width: W, height: 3, fill: '#d92b21' }, floor);
     el('rect', { x: 0, y: TOP + DEPTH + 27, width: W, height: H - (TOP + DEPTH + 27), fill: '#0a0a0a' }, floor);
@@ -101,15 +103,56 @@ class StageView {
     this.sideA = el('text', { x: 15, y: TOP + DEPTH / 2, fill: '#f0c9c4', 'font-size': 15, transform: `rotate(-90 15 ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, floor);
     this.sideB = el('text', { x: W - 15, y: TOP + DEPTH / 2, fill: '#f0c9c4', 'font-size': 15, transform: `rotate(90 ${W - 15} ${TOP + DEPTH / 2})`, 'text-anchor': 'middle', 'dominant-baseline': 'central' }, floor);
     this.back = el('text', { x: W / 2, y: 52, fill: '#7a7672', 'font-size': 15, 'text-anchor': 'middle' }, floor);
+    this.propLayer = el('g', {}, this.svg);
     this.lights = el('g', { style: 'mix-blend-mode:screen' }, this.svg);
     this.trailLayer = el('g', {}, this.svg);
     this.paths = el('g', {}, this.svg);
+    this.journeyLayer = el('g', {}, this.svg);
     this.layer = el('g', {}, this.svg);
+    this.marquee = el('rect', { fill: 'rgba(217,43,33,0.14)', stroke: '#d92b21', 'stroke-width': 2, 'stroke-dasharray': '6 6', visibility: 'hidden' }, this.svg);
     this.handle = el('g', { class: 'face-handle', visibility: 'hidden' }, this.svg);
     el('line', { x1: 0, y1: 0, x2: 0, y2: 62, stroke: '#ffffff', 'stroke-width': 2, 'stroke-dasharray': '3 5' }, this.handle);
     el('circle', { cx: 0, cy: 62, r: 11, fill: '#ffffff', stroke: '#d92b21', 'stroke-width': 3 }, this.handle);
     this.nodes = new Map(); this.pools = new Map(); this.trails = new Map();
     this.labels();
+    this.setMeters(opts.meters || 10);
+  }
+  setMeters(w) {
+    this.meters = w; this.numLine.innerHTML = '';
+    // a tick and a number at every whole metre from the centre (every two on a wide stage)
+    const step = w > 16 ? 2 : 1;
+    for (let m = 0; m <= w / 2 + 1e-6; m += step) for (const sgn of m ? [-1, 1] : [1]) {
+      const x = PADX + (0.5 + (sgn * m) / w) * (W - 2 * PADX);
+      el('rect', { x: x - 0.75, y: TOP + DEPTH - 22, width: 1.5, height: 7, fill: '#6a6460' }, this.numLine);
+      const t = el('text', { x, y: TOP + DEPTH - 4 }, this.numLine); t.textContent = m;
+    }
+  }
+  // set pieces and marks on the floor: boxes, pillars, labels
+  drawProps(props, selected) {
+    this.propLayer.innerHTML = '';
+    for (const pr of props || []) {
+      const [x, y] = this.map([pr.x, pr.y]);
+      const g = el('g', { class: 'prop', transform: `translate(${x.toFixed(1)} ${y.toFixed(1)})` }, this.propLayer); g.dataset.prop = pr.id;
+      const sel = pr.id === selected, stroke = sel ? '#ffffff' : '#7a706a';
+      if (pr.kind === 'rect') el('rect', { x: -pr.w * (W - 2 * PADX) / 2, y: -pr.h * DEPTH / 2, width: pr.w * (W - 2 * PADX), height: pr.h * DEPTH, fill: '#3a3431', stroke, 'stroke-width': 3 }, g);
+      else if (pr.kind === 'circle') el('circle', { r: pr.r * (W - 2 * PADX), fill: '#3a3431', stroke, 'stroke-width': 3 }, g);
+      else el('rect', { x: -6, y: -6, width: 12, height: 12, fill: '#d92b21', stroke, 'stroke-width': sel ? 3 : 0, transform: 'rotate(45)' }, g);
+      const tx = el('text', { y: pr.kind === 'mark' ? 26 : 6, 'text-anchor': 'middle', 'font-size': 16, fill: '#e8e2dc' }, g); tx.textContent = pr.text || '';
+    }
+  }
+  // one dancer's whole route through the piece, formation by formation
+  drawJourney(color, pts) {
+    this.journeyLayer.innerHTML = '';
+    if (!pts || pts.length < 2) return;
+    const xy = pts.map((p) => this.map(p));
+    el('polyline', { points: xy.map((q) => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' '), fill: 'none', stroke: color, 'stroke-width': 4, opacity: 0.55, 'stroke-linejoin': 'round' }, this.journeyLayer);
+    xy.forEach((q, i) => { el('circle', { cx: q[0], cy: q[1], r: 13, fill: '#0a0a0a', stroke: color, 'stroke-width': 2.5 }, this.journeyLayer); const t = el('text', { x: q[0], y: q[1], 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 13, fill: '#fff' }, this.journeyLayer); t.textContent = i + 1; });
+  }
+  showMarquee(a, b) {
+    if (!a) { this.marquee.setAttribute('visibility', 'hidden'); return; }
+    this.marquee.setAttribute('visibility', 'visible');
+    this.marquee.setAttribute('x', Math.min(a.x, b.x)); this.marquee.setAttribute('y', Math.min(a.y, b.y));
+    this.marquee.setAttribute('width', Math.abs(a.x - b.x)); this.marquee.setAttribute('height', Math.abs(a.y - b.y));
   }
   labels() {
     // stage right is the performer's right: the audience sees it on their left
@@ -120,7 +163,8 @@ class StageView {
   }
   setFlip(f) { this.flip = f; this.labels(); this.trails.clear(); }
   map(p) { const q = this.flip ? [1 - p[0], 1 - p[1]] : p; return px(q); }
-  unmap(x, y) { let p = [(x - PADX) / (W - 2 * PADX), (y - TOP) / DEPTH]; p = [clamp(p[0], 0.02, 0.98), clamp(p[1], 0.02, 0.98)]; return this.flip ? [1 - p[0], 1 - p[1]] : p; }
+  unmap(x, y) { let p = [(x - PADX) / (W - 2 * PADX), (y - TOP) / DEPTH]; p = [clamp(p[0], -0.045, 1.045), clamp(p[1], 0.02, 0.98)]; return this.flip ? [1 - p[0], 1 - p[1]] : p; }
+  unmapRaw(x, y) { const p = [(x - PADX) / (W - 2 * PADX), (y - TOP) / DEPTH]; return this.flip ? [1 - p[0], 1 - p[1]] : p; }
   toSvg(evt) { const pt = this.svg.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY; return pt.matrixTransform(this.svg.getScreenCTM().inverse()); }
   scale() { return Math.min(2.4, Math.max(1, 640 / (this.svg.clientWidth || 640))); }
   faceAngle(p) { return ((p && p[2]) || 0) + (this.flip ? 180 : 0); }
@@ -154,17 +198,19 @@ class StageView {
       const [x, y] = this.map(p);
       n.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)})`);
       n.face.setAttribute('transform', `rotate(${this.faceAngle(p).toFixed(1)})`);
-      n.ring.setAttribute('opacity', opts.selected === d.id ? 1 : 0);
+      const picked = opts.selected instanceof Set ? opts.selected.has(d.id) : opts.selected === d.id;
+      n.ring.setAttribute('opacity', picked ? 1 : 0);
+      n.setAttribute('opacity', p[0] < 0 || p[0] > 1 ? 0.5 : 1);
       const pool = this.pools.get(d.id);
       pool.setAttribute('transform', `translate(${x.toFixed(1)} ${(y + 8).toFixed(1)}) scale(${k.toFixed(2)})`);
       pool.setAttribute('opacity', opts.playing ? 1 : 0.55);
-      if (opts.selected === d.id && this.opts.editable && !opts.playing) {
+      if ((opts.handle !== undefined ? opts.handle : opts.selected) === d.id && this.opts.editable && !opts.playing) {
         this.handle.setAttribute('visibility', 'visible');
         this.handle.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(2)}) rotate(${this.faceAngle(p).toFixed(1)})`);
         this.handle.dataset.id = d.id;
       }
     });
-    if (!opts.selected || opts.playing) this.handle.setAttribute('visibility', 'hidden');
+    if (!(opts.handle !== undefined ? opts.handle : opts.selected) || opts.playing) this.handle.setAttribute('visibility', 'hidden');
     for (const [id, n] of this.nodes) if (!seen.has(id)) { n.remove(); this.nodes.delete(id); this.pools.get(id)?.remove(); this.pools.delete(id); }
     this.drawTrails(dancers, positions, !!opts.playing);
   }
@@ -275,22 +321,49 @@ const STORE = 'ofridance-stage-v1';
 function defaultState() {
   const dancers = makeCast(6);
   const mk = (name, key, counts = 8, move = 4) => ({ name, counts, move, pos: applyPreset(dancers, key) });
-  return { title: 'הקטע שלי', bpm: 100, dancers, formations: [mk('פתיחה', 'cluster'), mk('שורה', 'line'), mk('וי', 'v'), mk('מעגל', 'circle'), mk('אלכסון', 'diagonal'), mk('סיום', 'twoLines')] };
+  return { title: 'הקטע שלי', bpm: 100, stage: { w: 10 }, props: [], dancers, formations: [mk('פתיחה', 'cluster'), mk('שורה', 'line'), mk('וי', 'v'), mk('מעגל', 'circle'), mk('אלכסון', 'diagonal'), mk('סיום', 'twoLines')] };
 }
 function encodeState(s) { const json = JSON.stringify(s); return btoa(String.fromCharCode(...new TextEncoder().encode(json))); }
 function decodeState(b) { const bin = atob(b); return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))); }
 
 function full(app) {
-  let state;
-  try { const h = location.hash.match(/s=([^&]+)/); state = h ? decodeState(decodeURIComponent(h[1])) : JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { state = null; }
-  if (!state || !state.formations || !state.formations.length) state = defaultState();
-  let sel = 0, selDancer = null, playing = false, t = 0, raf = 0, lastCount = -1, voice = false, showPaths = true, mode3d = null, player = null, click = !state.music;
-  const undo = [];
+  // the library: every piece is kept separately in this browser
+  const LIB = 'ofridance-stage-lib-v1', PKEY = (id) => 'ofridance-stage-p-' + id;
+  const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  let lib = null; try { lib = JSON.parse(localStorage.getItem(LIB) || 'null'); } catch (e) {}
+  if (!lib || !lib.items) {
+    lib = { cur: null, items: {} };
+    try { const old = JSON.parse(localStorage.getItem(STORE) || 'null'); if (old && old.formations) { const id = newId(); lib.items[id] = { title: old.title || 'הקטע שלי', updated: Date.now() }; lib.cur = id; localStorage.setItem(PKEY(id), JSON.stringify(old)); } } catch (e) {}
+  }
+  const saveLib = () => { try { localStorage.setItem(LIB, JSON.stringify(lib)); } catch (e) {} };
+  let state = null;
+  try {
+    const h = location.hash.match(/s=([^&]+)/);
+    if (h) { state = decodeState(decodeURIComponent(h[1])); const id = newId(); lib.cur = id; lib.items[id] = { title: state.title || 'קטע ששותף איתי', updated: Date.now() }; history.replaceState(null, '', location.pathname); }
+    else if (lib.cur) state = JSON.parse(localStorage.getItem(PKEY(lib.cur)) || 'null');
+  } catch (e) { state = null; }
+  const firstVisit = !lib.cur;
+  if (!state || !state.formations || !state.formations.length) { state = defaultState(); if (!lib.cur) { lib.cur = newId(); lib.items[lib.cur] = { title: state.title, updated: Date.now() }; } }
+  state.stage = state.stage || { w: 10 }; state.props = state.props || [];
+  saveLib();
+  let sel = 0, playing = false, t = 0, raf = 0, lastCount = -1, voice = false, showPaths = true, mode3d = null, player = null, click = !state.music;
+  const selSet = new Set(); let scrubbing = false, showJourney = false, selProp = null;
+  const undo = [], redo = [];
   const $ = (q) => app.querySelector(q);
-  const view = new StageView($('.stage-host'), { label: 'הבמה', editable: true });
+  const view = new StageView($('.stage-host'), { label: 'הבמה', editable: true, meters: state.stage.w });
 
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {} };
-  const snapshot = () => { undo.push(JSON.stringify(state)); if (undo.length > 60) undo.shift(); };
+  const save = () => {
+    try {
+      localStorage.setItem(PKEY(lib.cur), JSON.stringify(state)); localStorage.setItem(STORE, JSON.stringify(state));
+      lib.items[lib.cur] = { title: state.title || 'ללא שם', updated: Date.now() }; saveLib();
+    } catch (e) {}
+  };
+  const snapshot = () => { undo.push(JSON.stringify(state)); if (undo.length > 80) undo.shift(); redo.length = 0; };
+  function restore(from, to) {
+    const s2 = from.pop(); if (!s2) { flash(from === undo ? 'אין עוד פעולות לבטל.' : 'אין פעולה לחזור אליה.'); return; }
+    to.push(JSON.stringify(state)); state = JSON.parse(s2); sel = Math.min(sel, state.formations.length - 1); selSet.clear(); selProp = null;
+    view.setMeters(state.stage.w); renderAll(); save();
+  }
   const startOf = (i) => state.formations.slice(0, i).reduce((a, f) => a + f.counts, 0);
   const bpmNow = () => (state.music ? state.music.bpm : state.bpm);
   const songTimeOf = (counts) => state.music.offset + (counts * 60) / state.music.bpm;
@@ -304,7 +377,7 @@ function full(app) {
       // a tiny top view of the formation, so the timeline reads like a storyboard
       const dots = state.dancers.map((d) => { const q = f.pos[d.id]; return q ? `<circle cx="${(q[0] * 100).toFixed(1)}" cy="${(q[1] * 60).toFixed(1)}" r="4.2" fill="${d.color}"/>` : ''; }).join('');
       b.innerHTML = `<svg class="bthumb" viewBox="-6 -6 112 72" aria-hidden="true">${dots}</svg><span class="bn">${escapeHtml(f.name)}</span><span class="bc">${f.counts} ספירות · מעבר ${f.move}</span>`;
-      b.addEventListener('click', () => { const was = playing; stop(); sel = i; t = was ? startOf(i) : startOf(i) + f.counts - 0.001; renderAll(); if (was) play(); });
+      b.addEventListener('click', () => { const was = playing; stop(); scrubbing = false; sel = i; t = was ? startOf(i) : startOf(i) + f.counts - 0.001; renderAll(); if (was) play(); });
       tl.appendChild(b);
     });
     const add = document.createElement('button'); add.type = 'button'; add.className = 'block add'; add.textContent = '+'; add.setAttribute('aria-label', 'מערך חדש בסוף');
@@ -333,17 +406,18 @@ function full(app) {
     const f = state.formations[sel];
     $('#f-name').value = f.name; $('#f-counts').value = f.counts; $('#f-move').value = f.move;
     $('#f-move').max = f.counts;
+    const nt = $('#f-notes'); if (nt) nt.value = f.note || '';
     $('.sel-label').textContent = `מערך ${sel + 1} מתוך ${state.formations.length}`;
   }
   function renderCast() {
     const list = $('.cast'); list.innerHTML = '';
     state.dancers.forEach((d, i) => {
-      const li = document.createElement('li'); li.className = 'cast-row' + (selDancer === d.id ? ' on' : '');
+      const li = document.createElement('li'); li.className = 'cast-row' + (selSet.has(d.id) ? ' on' : '');
       li.innerHTML = `<span class="sw" style="background:${d.color}">${i + 1}</span><input aria-label="שם רקדנית ${i + 1}" value="${escapeHtml(d.name)}" maxlength="14"><button type="button" class="col" aria-label="החלפת צבע">צבע</button><button type="button" class="rm" aria-label="הסרת ${escapeHtml(d.name)}">הסרה</button>`;
       li.querySelector('input').addEventListener('input', (e) => { d.name = e.target.value; drawNow(); save(); });
       li.querySelector('.col').addEventListener('click', () => { snapshot(); d.color = COLORS[(COLORS.indexOf(d.color) + 1) % COLORS.length]; renderCast(); drawNow(); save(); });
       li.querySelector('.rm').addEventListener('click', () => { if (state.dancers.length <= 1) return; snapshot(); state.dancers = state.dancers.filter((x) => x !== d); state.formations.forEach((f) => delete f.pos[d.id]); renderAll(); save(); });
-      li.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; selDancer = d.id; renderCast(); drawNow(); });
+      li.addEventListener('click', (e) => { if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return; selSet.clear(); selSet.add(d.id); renderCast(); drawNow(); });
       list.appendChild(li);
     });
     $('.cast-count').textContent = `${state.dancers.length} רקדניות`;
@@ -351,26 +425,102 @@ function full(app) {
   function drawNow() {
     const r = poseAt(state, Math.max(0, t));
     const f = state.formations[sel];
-    const pos = playing ? r.pos : f.pos;
-    view.draw(state.dancers, pos, { selected: selDancer, playing });
-    if (showPaths && !playing && sel > 0) view.drawPaths(state.dancers, state.formations[sel - 1].pos, f.pos); else view.drawPaths(state.dancers, null, null);
+    const live = playing || scrubbing;
+    const pos = live ? r.pos : f.pos;
+    const one = selSet.size === 1 ? [...selSet][0] : null;
+    view.draw(state.dancers, pos, { selected: selSet, handle: one, playing: live });
+    view.drawProps(state.props, selProp);
+    if (showPaths && !live && sel > 0) view.drawPaths(state.dancers, state.formations[sel - 1].pos, f.pos); else view.drawPaths(state.dancers, null, null);
+    const jd = one && showJourney && !live ? state.dancers.find((d) => d.id === one) : null;
+    view.drawJourney(jd && jd.color, jd ? state.formations.map((x) => x.pos[jd.id]).filter(Boolean) : null);
+    selTools();
     if (mode3d) mode3d.update(state.dancers, pos);
   }
   function renderAll() { renderTimeline(); renderForm(); renderCast(); drawNow(); updateCount(); }
   function updateCount() {
     const c = ((Math.floor(t) % 8) + 8) % 8 + 1, eight = Math.max(1, Math.floor(t / 8) + 1);
-    $('.big-count').textContent = playing ? c : '·';
+    $('.big-count').textContent = playing || scrubbing ? c : '·';
+    const sc = $('#scrub'); if (sc) { sc.max = total(state); if (document.activeElement !== sc) sc.value = clamp(t, 0, total(state)); const so = $('#scrub-out'); if (so) so.textContent = `ספירה ${Math.max(1, Math.floor(t) + 1)}`; }
     drawStrip();
     $('.eight').textContent = `שמינייה ${eight} מתוך ${Math.ceil(total(state) / 8)}`;
   }
 
-  // drag dancers on the selected formation
-  dragify(view, () => state.dancers, () => state.formations[sel].pos, (id, p) => {
-    if (playing) return;
-    const f = state.formations[sel];
-    if ($('#snap').checked) p = [Math.round(p[0] * 16) / 16, Math.round(p[1] * 10) / 10];
-    f.pos[id] = [p[0], p[1], (f.pos[id] && f.pos[id][2]) || 0]; selDancer = id; drawNow();
-  }, (id) => { if (id) { snapshot(); selDancer = id; renderCast(); } else { selDancer = null; renderCast(); drawNow(); } }, () => save());
+  // pointer on the stage: a tap selects, Shift or Ctrl adds, a frame on the empty floor selects many,
+  // and dragging moves everyone who is selected together
+  const tools = document.createElement('div'); tools.className = 'fx-seltools'; tools.hidden = true;
+  tools.innerHTML = '<span class="fx-seln"></span><button type="button" data-al="row">לשורה אחת</button><button type="button" data-al="col">לטור אחד</button><button type="button" data-al="spread">ריווח שווה</button><button type="button" data-al="mirror">היפוך צדדים</button><button type="button" data-al="none">ביטול בחירה</button>';
+  $('.stage-host').appendChild(tools);
+  function selTools() { const n = selSet.size; tools.hidden = n < 2 || playing || scrubbing; if (n >= 2) tools.querySelector('.fx-seln').textContent = `${n} רקדניות נבחרו`; }
+  tools.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-al]'); if (!b) return; const k = b.dataset.al;
+    if (k === 'none') { selSet.clear(); renderCast(); drawNow(); return; }
+    snapshot(); align(k); drawNow(); renderTimeline(); save();
+  });
+  function align(k) {
+    const f = state.formations[sel]; const ids = [...selSet].filter((id) => f.pos[id]); if (ids.length < 2) return;
+    const xs = ids.map((id) => f.pos[id][0]), ys = ids.map((id) => f.pos[id][1]);
+    const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length;
+    if (k === 'row') { const y = avg(ys); ids.forEach((id) => { const q = f.pos[id]; f.pos[id] = [q[0], y, q[2] || 0]; }); }
+    if (k === 'col') { const x = avg(xs); ids.forEach((id) => { const q = f.pos[id]; f.pos[id] = [x, q[1], q[2] || 0]; }); }
+    if (k === 'spread') {
+      const axis = Math.max(...xs) - Math.min(...xs) >= Math.max(...ys) - Math.min(...ys) ? 0 : 1;
+      const order = ids.slice().sort((a, b) => f.pos[a][axis] - f.pos[b][axis]);
+      const lo = f.pos[order[0]][axis], hi = f.pos[order[order.length - 1]][axis];
+      order.forEach((id, i) => { const q = f.pos[id].slice(); q[axis] = lo + ((hi - lo) * i) / (order.length - 1); f.pos[id] = q; });
+    }
+    if (k === 'mirror') { const lo = Math.min(...xs), hi = Math.max(...xs); ids.forEach((id) => { const q = f.pos[id]; f.pos[id] = [lo + hi - q[0], q[1], (360 - (q[2] || 0)) % 360]; }); }
+  }
+  let drag = null;
+  view.svg.addEventListener('pointerdown', (e) => {
+    if (playing || e.target.closest('.face-handle')) return;
+    const q = view.toSvg(e), g = e.target.closest('.dancer'), pr = e.target.closest('.prop'), add = e.shiftKey || e.ctrlKey || e.metaKey;
+    if (scrubbing) { scrubbing = false; t = startOf(sel) + state.formations[sel].counts - 0.001; }
+    if (g) {
+      const id = g.dataset.id;
+      if (add) { if (selSet.has(id)) selSet.delete(id); else selSet.add(id); } else if (!selSet.has(id)) { selSet.clear(); selSet.add(id); }
+      selProp = null; snapshot();
+      const f = state.formations[sel];
+      drag = { kind: 'dancers', start: view.unmapRaw(q.x, q.y), orig: new Map([...selSet].map((x) => [x, (f.pos[x] || [0.5, 0.5, 0]).slice()])), moved: false };
+      view.svg.setPointerCapture(e.pointerId); renderCast(); drawNow(); renderStagePane(); e.preventDefault(); return;
+    }
+    if (pr) {
+      const p0 = state.props.find((x) => x.id === pr.dataset.prop); if (!p0) return;
+      selProp = p0.id; selSet.clear(); snapshot();
+      drag = { kind: 'prop', prop: p0, start: view.unmapRaw(q.x, q.y), orig: [p0.x, p0.y], moved: false };
+      view.svg.setPointerCapture(e.pointerId); renderStagePane(); drawNow(); e.preventDefault(); return;
+    }
+    selProp = null; if (!add) selSet.clear();
+    drag = { kind: 'frame', a: q, base: new Set(selSet) };
+    view.svg.setPointerCapture(e.pointerId); renderCast(); renderStagePane(); drawNow();
+  });
+  view.svg.addEventListener('pointermove', (e) => {
+    if (!drag) return; const q = view.toSvg(e);
+    if (drag.kind === 'frame') {
+      view.showMarquee(drag.a, q);
+      const x0 = Math.min(drag.a.x, q.x), x1 = Math.max(drag.a.x, q.x), y0 = Math.min(drag.a.y, q.y), y1 = Math.max(drag.a.y, q.y);
+      const f = state.formations[sel]; selSet.clear(); drag.base.forEach((id) => selSet.add(id));
+      state.dancers.forEach((d) => { const p = f.pos[d.id]; if (!p) return; const [x, y] = view.map(p); if (x >= x0 && x <= x1 && y >= y0 && y <= y1) selSet.add(d.id); });
+      drawNow(); return;
+    }
+    const cur = view.unmapRaw(q.x, q.y), dx = cur[0] - drag.start[0], dy = cur[1] - drag.start[1];
+    if (Math.abs(dx) + Math.abs(dy) > 0.002) drag.moved = true;
+    if (drag.kind === 'prop') { drag.prop.x = clamp(drag.orig[0] + dx, 0, 1); drag.prop.y = clamp(drag.orig[1] + dy, 0, 1); drawNow(); return; }
+    const f = state.formations[sel], snapOn = $('#snap').checked && drag.orig.size === 1;
+    drag.orig.forEach((o, id) => {
+      let x = clamp(o[0] + dx, -0.045, 1.045), y = clamp(o[1] + dy, 0.02, 0.98);
+      if (snapOn && x >= 0 && x <= 1) { x = Math.round(x * 16) / 16; y = Math.round(y * 10) / 10; }
+      f.pos[id] = [x, y, o[2] || 0];
+    });
+    drawNow();
+  });
+  const endDrag = () => {
+    if (!drag) return; const k = drag; drag = null; view.showMarquee(null);
+    if (k.kind === 'frame') { renderCast(); drawNow(); return; }
+    if (!k.moved) { undo.pop(); return; }
+    renderTimeline(); save();
+  };
+  view.svg.addEventListener('pointerup', endDrag); view.svg.addEventListener('pointercancel', endDrag);
+  view.svg.style.touchAction = 'none';
 
   // turning a dancer: drag the round handle, or use the facing buttons, or Q / E
   const setFace = (id, deg) => { const f = state.formations[sel]; const p = f.pos[id] || [0.5, 0.5, 0]; f.pos[id] = [p[0], p[1], ((deg % 360) + 360) % 360]; };
@@ -388,24 +538,26 @@ function full(app) {
   app.querySelectorAll('[data-face]').forEach((b) => b.addEventListener('click', () => {
     if (playing) return; snapshot();
     if (b.dataset.face === 'all') state.dancers.forEach((d) => setFace(d.id, 0));
-    else if (selDancer) setFace(selDancer, +b.dataset.face);
+    else if (selSet.size) selSet.forEach((id) => setFace(id, +b.dataset.face));
     else { flash('בחרו קודם רקדנית על הבמה.'); return; }
     drawNow(); save();
   }));
 
-  // keyboard nudging of the selected dancer
+  // keyboard: arrows move the selection, Q and E turn it
   view.svg.addEventListener('keydown', (e) => {
-    const g = e.target.closest('.dancer'); if (!g) return; const id = g.dataset.id; selDancer = id;
-    const f = state.formations[sel]; const p = f.pos[id] || [0.5, 0.5]; const s = e.shiftKey ? 0.05 : 0.0125;
-    const dir = view.flip ? -1 : 1;
-    if (e.code === 'KeyQ' || e.code === 'KeyE') { e.preventDefault(); snapshot(); setFace(id, (p[2] || 0) + (e.code === 'KeyQ' ? -45 : 45)); drawNow(); save(); return; }
-    const m = { ArrowLeft: [-s * dir, 0], ArrowRight: [s * dir, 0], ArrowUp: [0, -s * dir], ArrowDown: [0, s * dir] }[e.key];
-    if (!m) return; e.preventDefault(); snapshot(); f.pos[id] = [clamp(p[0] + m[0], 0.02, 0.98), clamp(p[1] + m[1], 0.02, 0.98), p[2] || 0]; drawNow(); save();
+    const g = e.target.closest('.dancer'); if (!g) return; const id = g.dataset.id;
+    if (!selSet.has(id)) { selSet.clear(); selSet.add(id); }
+    const f = state.formations[sel], st = e.shiftKey ? 0.05 : 0.0125, dir = view.flip ? -1 : 1;
+    if (e.code === 'KeyQ' || e.code === 'KeyE') { e.preventDefault(); snapshot(); selSet.forEach((x) => { const p = f.pos[x] || [0.5, 0.5, 0]; setFace(x, (p[2] || 0) + (e.code === 'KeyQ' ? -45 : 45)); }); drawNow(); save(); return; }
+    const m = { ArrowLeft: [-st * dir, 0], ArrowRight: [st * dir, 0], ArrowUp: [0, -st * dir], ArrowDown: [0, st * dir] }[e.key];
+    if (!m) return; e.preventDefault(); snapshot();
+    selSet.forEach((x) => { const p = f.pos[x] || [0.5, 0.5]; f.pos[x] = [clamp(p[0] + m[0], -0.045, 1.045), clamp(p[1] + m[1], 0.02, 0.98), p[2] || 0]; });
+    drawNow(); renderTimeline(); save();
   });
 
   // presets
   const pre = $('.presets');
-  Object.entries(PRESETS).forEach(([k, v]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v.name; b.addEventListener('click', () => { stop(); snapshot(); state.formations[sel].pos = applyPreset(state.dancers, k); drawNow(); save(); }); pre.appendChild(b); });
+  Object.entries(PRESETS).forEach(([k, v]) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = v.name; b.addEventListener('click', () => { stop(); scrubbing = false; snapshot(); const keep = state.formations[sel].pos; const pos = applyPreset(state.dancers, k); for (const id in pos) pos[id][2] = (keep[id] && keep[id][2]) || 0; state.formations[sel].pos = pos; drawNow(); renderTimeline(); save(); }); pre.appendChild(b); });
 
   // formation fields
   $('#f-name').addEventListener('input', (e) => { state.formations[sel].name = e.target.value || 'מערך'; renderTimeline(); save(); });
@@ -479,9 +631,15 @@ function full(app) {
   document.addEventListener('keydown', (e) => {
     if (e.target.closest('input, textarea, select')) return;
     if (e.code === 'Space') { e.preventDefault(); play(); }
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); const s = undo.pop(); if (s) { state = JSON.parse(s); sel = Math.min(sel, state.formations.length - 1); renderAll(); save(); } }
+    const k = e.key.toLowerCase();
+    if ((e.ctrlKey || e.metaKey) && k === 'z' && !e.shiftKey) { e.preventDefault(); restore(undo, redo); }
+    if ((e.ctrlKey || e.metaKey) && (k === 'y' || (k === 'z' && e.shiftKey))) { e.preventDefault(); restore(redo, undo); }
+    if ((e.ctrlKey || e.metaKey) && k === 'a') { e.preventDefault(); state.dancers.forEach((d) => selSet.add(d.id)); renderCast(); drawNow(); }
+    if (e.key === 'Escape') { selSet.clear(); selProp = null; renderCast(); renderStagePane(); drawNow(); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selProp) { snapshot(); state.props = state.props.filter((x) => x.id !== selProp); selProp = null; renderStagePane(); drawNow(); save(); }
   });
-  $('#undo').addEventListener('click', () => { const s = undo.pop(); if (s) { state = JSON.parse(s); sel = Math.min(sel, state.formations.length - 1); renderAll(); save(); } });
+  $('#undo').addEventListener('click', () => restore(undo, redo));
+  const redoBtn = $('#redo'); if (redoBtn) redoBtn.addEventListener('click', () => restore(redo, undo));
 
   // save, share, export, reset
   $('#share').addEventListener('click', async () => {
@@ -490,7 +648,7 @@ function full(app) {
   });
   $('#png').addEventListener('click', () => exportPng(view.svg, (state.formations[sel].name || 'מערך') + '.png'));
   $('#print').addEventListener('click', () => printSheet(state));
-  $('#reset').addEventListener('click', () => { if (!confirm('להתחיל קטע חדש? הקטע הנוכחי יימחק מהדפדפן.')) return; snapshot(); state = defaultState(); sel = 0; t = 0; renderAll(); save(); });
+  $('#reset').addEventListener('click', () => wizard());
   function flash(msg) { const o = document.querySelector('.flash'); o.textContent = msg; o.classList.add('on'); clearTimeout(o._t); o._t = setTimeout(() => o.classList.remove('on'), 3200); }
 
 
@@ -637,6 +795,119 @@ function full(app) {
     } catch (e) { b3.textContent = 'מבט תלת-ממד'; flash('לא הצלחנו לטעון את התלת-ממד. בדקו חיבור לאינטרנט.'); }
   });
 
+  // ---------- the pro layer: everything below stays out of the way until it is needed ----------
+  // title of the piece, in the top bar
+  const titleIn = $('#title');
+  if (titleIn) { titleIn.value = state.title || ''; titleIn.addEventListener('input', () => { state.title = titleIn.value || 'ללא שם'; save(); }); }
+
+  // formation notes, order and mirror
+  const notesIn = $('#f-notes'); if (notesIn) notesIn.addEventListener('input', () => { state.formations[sel].note = notesIn.value; save(); });
+  const moveF = (d) => { const j = sel + d; if (j < 0 || j >= state.formations.length) return; stop(); snapshot(); const F = state.formations; [F[sel], F[j]] = [F[j], F[sel]]; sel = j; t = startOf(sel) + F[sel].counts - 0.001; renderAll(); save(); };
+  const ea = $('#f-earlier'), la = $('#f-later'), mi = $('#f-mirror');
+  if (ea) ea.addEventListener('click', () => moveF(-1));
+  if (la) la.addEventListener('click', () => moveF(1));
+  if (mi) mi.addEventListener('click', () => { stop(); snapshot(); const f = state.formations[sel]; for (const id in f.pos) { const q = f.pos[id]; f.pos[id] = [1 - q[0], q[1], (360 - (q[2] || 0)) % 360]; } drawNow(); renderTimeline(); save(); flash('המערך התהפך: ימין הבמה ושמאל הבמה התחלפו.'); });
+
+  // cast: select all, and one dancer's whole route
+  const sa = $('#sel-all'); if (sa) sa.addEventListener('click', () => { state.dancers.forEach((d) => selSet.add(d.id)); renderCast(); drawNow(); });
+  const jr = $('#journey'); if (jr) jr.addEventListener('change', () => { showJourney = jr.checked; if (showJourney && selSet.size !== 1) flash('בחרו רקדנית אחת על הבמה כדי לראות את המסלול שלה.'); drawNow(); });
+
+  // scrubbing: drag along the piece and watch everyone in between
+  const scrub = $('#scrub');
+  if (scrub) scrub.addEventListener('input', () => {
+    stop(); scrubbing = true; t = +scrub.value; const r = poseAt(state, t);
+    if (r.index !== sel) { sel = r.index; renderTimeline(); renderForm(); } else placeHead();
+    drawNow(); updateCount();
+  });
+
+  // the stage: size and set pieces
+  function renderStagePane() {
+    const w = $('#stage-w'); if (!w) return;
+    w.value = state.stage.w;
+    const ed = $('.prop-edit'), pr = state.props.find((x) => x.id === selProp);
+    ed.hidden = !pr; if (pr) $('#prop-text').value = pr.text || '';
+    $('.prop-count').textContent = state.props.length ? `${state.props.length} על הבמה` : 'עוד אין';
+  }
+  if ($('#stage-w')) {
+    $('#stage-w').addEventListener('change', (e) => { snapshot(); state.stage.w = clamp(+e.target.value || 10, 4, 30); view.setMeters(state.stage.w); renderStagePane(); save(); });
+    const addProp = (kind) => {
+      snapshot();
+      const pr = { id: 'p' + newId(), kind, x: 0.5, y: kind === 'mark' ? 0.86 : 0.3, text: { rect: 'קובייה', circle: 'עמוד', mark: 'סימון' }[kind] };
+      if (kind === 'rect') { pr.w = 0.16; pr.h = 0.12; } if (kind === 'circle') pr.r = 0.035;
+      state.props.push(pr); selProp = pr.id; selSet.clear(); renderStagePane(); drawNow(); save();
+    };
+    $('#prop-rect').addEventListener('click', () => addProp('rect'));
+    $('#prop-circle').addEventListener('click', () => addProp('circle'));
+    $('#prop-mark').addEventListener('click', () => addProp('mark'));
+    $('#prop-text').addEventListener('input', (e) => { const pr = state.props.find((x) => x.id === selProp); if (pr) { pr.text = e.target.value; drawNow(); save(); } });
+    $('#prop-del').addEventListener('click', () => { snapshot(); state.props = state.props.filter((x) => x.id !== selProp); selProp = null; renderStagePane(); drawNow(); save(); });
+  }
+
+  // ---------- my pieces: a library in this browser ----------
+  function dialogOf(cls, html) {
+    let d = document.querySelector('dialog.' + cls);
+    if (!d) { d = document.createElement('dialog'); d.className = 'fx-dialog ' + cls; document.body.appendChild(d); }
+    d.innerHTML = html; return d;
+  }
+  function openLibrary() {
+    const items = Object.entries(lib.items).sort((a, b) => b[1].updated - a[1].updated);
+    const when = (ms) => new Date(ms).toLocaleDateString('he-IL', { day: 'numeric', month: 'long' });
+    const d = dialogOf('fx-lib', `<h2>הקטעים שלי</h2><p class="fx-hint">כל קטע נשמר בנפרד בדפדפן הזה. כדי להעביר קטע למכשיר אחר, לשלוח אותו למישהי או לגבות אותו, משתמשים בכפתור "שיתוף".</p>
+      <ul class="fx-libl">${items.map(([id, it]) => `<li${id === lib.cur ? ' class="on"' : ''}><span class="nm">${escapeHtml(it.title)}</span><span class="dt">${when(it.updated)}</span><button type="button" data-open="${id}">${id === lib.cur ? 'פתוח עכשיו' : 'פתיחה'}</button><button type="button" data-dup="${id}">שכפול</button><button type="button" data-del="${id}">מחיקה</button></li>`).join('')}</ul>
+      <div class="fx-dlg-actions"><button type="button" class="fx-btn fx-primary" data-new>קטע חדש</button><button type="button" class="fx-btn" data-close>סגירה</button></div>`);
+    d.querySelector('[data-close]').addEventListener('click', () => d.close());
+    d.querySelector('[data-new]').addEventListener('click', () => { d.close(); wizard(); });
+    d.querySelectorAll('[data-open]').forEach((b) => b.addEventListener('click', () => { if (b.dataset.open === lib.cur) { d.close(); return; } save(); lib.cur = b.dataset.open; saveLib(); location.reload(); }));
+    d.querySelectorAll('[data-dup]').forEach((b) => b.addEventListener('click', () => {
+      save(); const src = localStorage.getItem(PKEY(b.dataset.dup)); if (!src) return;
+      const id = newId(), st = JSON.parse(src); st.title = (st.title || 'קטע') + ' (עותק)';
+      localStorage.setItem(PKEY(id), JSON.stringify(st)); lib.items[id] = { title: st.title, updated: Date.now() }; saveLib(); openLibrary();
+    }));
+    d.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', () => {
+      const id = b.dataset.del; if (!confirm(`למחוק את "${lib.items[id].title}"? אי אפשר לשחזר.`)) return;
+      delete lib.items[id]; try { localStorage.removeItem(PKEY(id)); } catch (e) {}
+      if (id === lib.cur) { lib.cur = Object.keys(lib.items)[0] || null; saveLib(); location.reload(); return; }
+      saveLib(); openLibrary();
+    }));
+    if (!d.open) d.showModal();
+  }
+  const libBtn = $('#lib'); if (libBtn) libBtn.addEventListener('click', openLibrary);
+
+  // ---------- a new piece starts in the right place: who, how long, which style ----------
+  function wizard() {
+    const d = dialogOf('fx-wiz', `<h2>קטע חדש</h2>
+      <label>שם הקטע <input name="title" type="text" maxlength="40" value="קטע חדש"></label>
+      <div class="row"><label>כמה רקדניות <input name="n" type="number" min="1" max="16" value="${Math.min(16, state.dancers.length || 6)}"></label>
+      <label>רוחב הבמה, במטרים <input name="w" type="number" min="4" max="30" value="${state.stage.w || 10}"></label></div>
+      <label>השמות, מופרדים בפסיק (לא חובה) <input name="names" type="text" placeholder="נועה, מאיה, תמר…"></label>
+      <fieldset><legend>סגנון</legend><label class="fx-check"><input type="radio" name="style" value="hiphop" checked> היפ הופ: מערכים חדים ומעברים מהירים</label><label class="fx-check"><input type="radio" name="style" value="modern"> מודרני: מערכים פתוחים ומעברים ארוכים</label></fieldset>
+      <label>אורך הקטע <select name="len"><option value="6">6 שמיניות, בערך חצי דקה</option><option value="12" selected>12 שמיניות, בערך דקה</option><option value="20">20 שמיניות, בערך דקה וחצי</option><option value="28">28 שמיניות, בערך שתי דקות</option></select></label>
+      <label class="fx-check"><input type="checkbox" name="cast" checked> לשמור את הרקדניות מהקטע הנוכחי</label>
+      <p class="fx-hint">אחרי שיוצרים, עוברים ללשונית "מוזיקה", מעלים את השיר ולוחצים "שלד לפי השיר": המערכים יתיישרו על החלקים של השיר.</p>
+      <div class="fx-dlg-actions"><button type="button" class="fx-btn fx-primary" data-go>ליצור את הקטע</button><button type="button" class="fx-btn" data-close>ביטול</button></div>`);
+    const f = (n) => d.querySelector(`[name="${n}"]`);
+    f('cast').closest('label').hidden = !state.dancers.length;
+    d.querySelector('[data-close]').addEventListener('click', () => d.close());
+    d.querySelector('[data-go]').addEventListener('click', () => {
+      save();
+      const n = clamp(parseInt(f('n').value, 10) || 6, 1, 16), names = f('names').value.split(/[,،]/).map((x) => x.trim()).filter(Boolean);
+      const style = d.querySelector('[name="style"]:checked').value, eights = +f('len').value;
+      let dancers = f('cast').checked ? JSON.parse(JSON.stringify(state.dancers)).slice(0, n) : [];
+      if (dancers.length < n) dancers = dancers.concat(makeCast(n).slice(dancers.length));
+      names.forEach((nm, i) => { if (dancers[i]) dancers[i].name = nm.slice(0, 14); });
+      const seq = style === 'modern' ? [['פתיחה', 'scatter'], ['אלכסון', 'diagonal'], ['חצי מעגל', 'semi'], ['אשכול', 'cluster'], ['מעגל', 'circle'], ['טור', 'column'], ['חלונות', 'windows']] : [['פתיחה', 'cluster'], ['שורה', 'line'], ['וי', 'v'], ['חלונות', 'windows'], ['חץ', 'arrow'], ['משולש', 'triangle'], ['שתי שורות', 'twoLines']];
+      const per = style === 'modern' ? 16 : 8, count = Math.max(2, Math.round((eights * 8) / per));
+      const formations = Array.from({ length: count }, (_, i) => { const [nm, key] = i === count - 1 ? ['סיום', style === 'modern' ? 'semi' : 'twoLines'] : seq[i % seq.length]; return { name: i >= seq.length && i < count - 1 ? `${nm} ${Math.floor(i / seq.length) + 1}` : nm, counts: per, move: style === 'modern' ? 8 : 4, pos: applyPreset(dancers, key) }; });
+      const st = { title: f('title').value || 'קטע חדש', bpm: style === 'modern' ? 80 : 100, stage: { w: clamp(+f('w').value || 10, 4, 30) }, props: [], dancers, formations, style };
+      const id = newId(); localStorage.setItem(PKEY(id), JSON.stringify(st)); lib.items[id] = { title: st.title, updated: Date.now() }; lib.cur = id; saveLib();
+      try { sessionStorage.setItem('ofridance-fx-tab', 'music'); } catch (e) {}
+      location.reload();
+    });
+    if (!d.open) d.showModal();
+  }
+  // after the wizard, open on the music tab so the song comes next
+  try { const tab = sessionStorage.getItem('ofridance-fx-tab'); if (tab) { sessionStorage.removeItem('ofridance-fx-tab'); setTimeout(() => { const b = app.querySelector(`[data-tab="${tab}"]`); if (b) b.click(); flash('הקטע מוכן. עכשיו מעלים שיר, או מתחילים להזיז רקדניות.'); }, 50); } } catch (e) {}
+
   // the side panel of the app is split into tabs
   app.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
     app.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
@@ -652,7 +923,7 @@ function full(app) {
   }
 
   t = startOf(sel) + state.formations[sel].counts - 0.001;
-  renderAll();
+  renderAll(); renderStagePane();
 }
 
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -666,18 +937,43 @@ function exportPng(svg, name) {
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
 }
 
+// where a dancer stands, in the words used in rehearsal: metres from centre on the number line, and the depth
+function whereText(p, w) {
+  if (!p) return '—';
+  if (p[0] < 0 || p[0] > 1) return p[0] < 0 ? 'בכניסה, ימין הבמה' : 'בכניסה, שמאל הבמה';
+  const m = (p[0] - 0.5) * w, a = Math.abs(m), num = Math.round(a * 2) / 2;
+  const side = num < 0.5 ? 'מרכז' : `${num} מ׳ ${m < 0 ? 'ימינה' : 'שמאלה'}`;
+  const depth = p[1] > 0.66 ? 'קדמה' : p[1] > 0.36 ? 'אמצע' : 'עומק';
+  return `${side} · ${depth}`;
+}
+function faceText(deg) { const d = ((Math.round((deg || 0) / 45) * 45) % 360 + 360) % 360; return { 0: 'לקהל', 45: 'אלכסון ימינה', 90: 'לימין הבמה', 135: 'אחורה ימינה', 180: 'גב לקהל', 225: 'אחורה שמאלה', 270: 'לשמאל הבמה', 315: 'אלכסון שמאלה' }[d]; }
+
 function printSheet(state) {
   const sheet = document.querySelector('.print-sheet'); if (!sheet) return;
-  sheet.innerHTML = `<h1>${escapeHtml(state.title)} · דף עימוד</h1><p>${state.dancers.map((d, i) => `${i + 1}. ${escapeHtml(d.name)}`).join(' · ')} · קצב ${state.bpm}</p>`;
+  const w = (state.stage && state.stage.w) || 10, T = total(state);
+  const song = state.music ? `${escapeHtml(state.music.name || 'שיר')} · ${state.music.bpm} פעמות לדקה` : `מטרונום · ${state.bpm} פעמות לדקה`;
+  sheet.innerHTML = `<section class="ps-cover"><h1>${escapeHtml(state.title || 'הקטע')}</h1><p class="ps-sub">חוברת עימוד · OFRIDANCE</p>
+    <p>${state.formations.length} מערכים · ${Math.ceil(T / 8)} שמיניות · ${song} · במה ברוחב ${w} מטר</p>
+    <ul class="ps-cast">${state.dancers.map((d, i) => `<li><span class="sw" style="background:${d.color}">${i + 1}</span>${escapeHtml(d.name)}</li>`).join('')}</ul>
+    <p class="ps-key">המספרים על קדמת הבמה הם מטרים מהמרכז. "ימינה" ו"שמאלה" הם מנקודת המבט של הרקדנית שעומדת מול הקהל.</p></section>`;
   let start = 0;
   state.formations.forEach((f, i) => {
-    const box = document.createElement('figure');
-    const v = new StageView(box, { label: f.name });
-    v.draw(state.dancers, f.pos);
+    const box = document.createElement('figure'); box.className = 'ps-form';
+    const v = new StageView(box, { label: f.name, meters: w });
+    v.drawProps(state.props, null); v.draw(state.dancers, f.pos);
     if (i > 0) v.drawPaths(state.dancers, state.formations[i - 1].pos, f.pos);
     const cap = document.createElement('figcaption');
-    cap.textContent = `${i + 1}. ${f.name} · ספירות ${start + 1} עד ${start + f.counts} · מעבר של ${f.move}`;
+    cap.innerHTML = `<b>${i + 1}. ${escapeHtml(f.name)}</b> · ספירות ${start + 1} עד ${start + f.counts} (שמינייה ${Math.floor(start / 8) + 1}) · מעבר של ${f.move} ספירות${f.note ? `<br>${escapeHtml(f.note)}` : ''}`;
     box.appendChild(cap); sheet.appendChild(box); start += f.counts;
+  });
+  // one page per dancer: everything she needs to know, formation by formation
+  state.dancers.forEach((d, n) => {
+    const sec = document.createElement('section'); sec.className = 'ps-dancer';
+    let st2 = 0;
+    const rows = state.formations.map((f, i) => { const p = f.pos[d.id], prev = i ? state.formations[i - 1].pos[d.id] : null; const moves = prev && p && Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.01; const r = `<tr><td>${i + 1}. ${escapeHtml(f.name)}</td><td>${st2 + 1}</td><td>${whereText(p, w)}</td><td>${p ? faceText(p[2]) : '—'}</td><td>${i === 0 ? 'עמדת פתיחה' : moves ? `הולכת ב־${f.move} ספירות` : 'נשארת'}</td></tr>`; st2 += f.counts; return r; }).join('');
+    sec.innerHTML = `<h2><span class="sw" style="background:${d.color}">${n + 1}</span>הדף של ${escapeHtml(d.name)}</h2><p class="ps-sub">${escapeHtml(state.title || '')}</p>
+      <table><thead><tr><th>מערך</th><th>ספירה</th><th>איפה</th><th>לאן מסתכלת</th><th>מעבר</th></tr></thead><tbody>${rows}</tbody></table>`;
+    sheet.appendChild(sec);
   });
   window.print();
 }

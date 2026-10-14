@@ -23,7 +23,7 @@
 .fx .stage-host .stage-svg { width: 100%; height: 100%; max-height: 100%; }
 .fx .stage-host .stage-3d { position: absolute; inset: 0; aspect-ratio: auto; }
 .fx-panel.panel { overflow: auto; padding: 0 0 1rem; gap: 0; align-content: start; background: #111; }
-.fx-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(3, 1fr); background: #181818; }
+.fx-tabs { position: sticky; top: 0; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); background: #181818; }
 .fx-tabs button { font: inherit; font-size: 1rem; font-weight: 600; color: #999; background: none; border: 0; min-height: 3rem; cursor: pointer; border-bottom: 3px solid transparent; }
 .fx-tabs button[aria-selected="true"] { color: #fff; border-bottom-color: var(--red); }
 .fx-pane { display: grid; gap: 0.75rem; padding: 1rem 1rem 0; align-content: start; }
@@ -69,3 +69,52 @@
   .fx-tools .fx-btn { padding: 0 0.6rem; font-size: 0.875rem; }
 }
 .fx .ruler { display: none; }
+
+/* ---- the pro layer */
+.fx-name input { font: inherit; font-size: 1.0625rem; font-weight: 600; color: #fff; background: transparent; border: 0; border-bottom: 2px solid transparent; min-height: 2.5rem; width: 14rem; max-width: 40vw; padding: 0 0.25rem; }
+.fx-name input:hover, .fx-name input:focus { border-bottom-color: var(--red); outline: none; }
+.fx-pane textarea { font: inherit; font-size: 0.9375rem; background: #232323; border: 1px solid #333; color: #fff; padding: 0.5rem 0.7rem; resize: vertical; }
+.fx-seltools { position: absolute; inset-inline: 0; bottom: 12px; margin-inline: auto; width: max-content; max-width: calc(100% - 24px); display: flex; flex-wrap: wrap; align-items: center; gap: 4px; background: #fff; color: #000; padding: 6px; z-index: 5; }
+.fx-seltools[hidden] { display: none; }
+.fx-seltools .fx-seln { font-weight: 600; padding-inline: 0.5rem; }
+.fx-seltools button { font: inherit; font-size: 0.9375rem; background: #eee; color: #000; border: 0; min-height: 2.5rem; padding: 0 0.75rem; cursor: pointer; }
+.fx-seltools button:hover { background: var(--red); color: #fff; }
+.fx-scrub { display: flex; align-items: center; gap: 0.75rem; }
+.fx-scrub input { flex: 1; accent-color: var(--red); min-height: 1.75rem; }
+.fx-scrub output { font-variant-numeric: tabular-nums; color: #aaa; font-size: 0.875rem; min-width: 5.5rem; }
+.stage-svg .prop { cursor: move; }
+.fx-dialog { background: #161616; color: #fff; border: 0; padding: 1.5rem; width: min(34rem, calc(100vw - 2rem)); }
+.fx-dialog[open] { display: grid; gap: 0.9rem; }
+.fx-dialog::backdrop { background: rgba(0, 0, 0, 0.7); }
+.fx-dialog h2 { font-size: 1.5rem; font-weight: 600; }
+.fx-dialog label { display: grid; gap: 0.3rem; font-size: 0.9375rem; color: #bbb; }
+.fx-dialog .fx-check { display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+.fx-dialog input[type="text"], .fx-dialog input[type="number"], .fx-dialog select { font: inherit; min-height: 2.75rem; background: #232323; border: 1px solid #333; color: #fff; padding: 0 0.7rem; }
+.fx-dialog .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fx-dialog fieldset { border: 0; padding: 0; display: grid; gap: 0.4rem; }
+.fx-dialog legend { font-size: 0.9375rem; color: #bbb; margin-bottom: 0.3rem; }
+.fx-dlg-actions { display: flex; gap: 6px; margin-top: 0.5rem; }
+.fx-libl { list-style: none; padding: 0; display: grid; gap: 4px; max-height: 50vh; overflow: auto; }
+.fx-libl li { display: grid; grid-template-columns: 1fr auto auto auto auto; align-items: center; gap: 6px; background: #1f1f1f; padding: 6px 10px 6px 6px; }
+.fx-libl li.on { background: #2a1513; }
+.fx-libl .nm { font-weight: 600; }
+.fx-libl .dt { color: #999; font-size: 0.875rem; }
+.fx-libl button { font: inherit; font-size: 0.875rem; background: #2c2c2c; color: #fff; border: 0; min-height: 2.5rem; padding: 0 0.6rem; cursor: pointer; }
+@media (max-width: 40em) { .fx-libl li { grid-template-columns: 1fr auto auto; } .fx-libl .dt { display: none; } .fx-name input { width: 9rem; } }
+
+/* ---- the booklet */
+@media print {
+  .print-sheet .ps-cover, .print-sheet .ps-dancer { grid-column: 1 / -1; }
+  .print-sheet .ps-cover { break-after: page; display: grid; gap: 6mm; align-content: start; }
+  .print-sheet .ps-cover h1 { font-size: 30pt; }
+  .print-sheet .ps-sub { color: #555; }
+  .print-sheet .ps-cast { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; }
+  .print-sheet .ps-cast li, .print-sheet .ps-dancer h2 { display: flex; align-items: center; gap: 2mm; }
+  .print-sheet .sw { display: inline-grid; place-items: center; width: 7mm; height: 7mm; border-radius: 50%; color: #000; font-weight: 600; font-size: 9pt; border: 0.3mm solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-sheet .ps-key { font-size: 10pt; color: #333; }
+  .print-sheet .ps-form svg { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-sheet .ps-dancer { break-before: page; }
+  .print-sheet .ps-dancer h2 { font-size: 18pt; }
+  .print-sheet table { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-top: 4mm; }
+  .print-sheet th, .print-sheet td { text-align: start; padding: 2mm 1.5mm; border-bottom: 0.2mm solid #999; }
+}
