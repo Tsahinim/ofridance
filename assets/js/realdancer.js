@@ -3,6 +3,7 @@
 // The player maps every segment onto the model's own rest pose, so the recording plays on her body as it was danced.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const SEGS = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand',
   'RightShoulder', 'RightArm', 'RightForeArm', 'RightHand', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'RightUpLeg', 'RightLeg', 'RightFoot'];
@@ -68,7 +69,7 @@ export async function createRealDancer(opts = {}) {
   // every dancer gets its own copy of the skeleton
   const { clone } = await import('three/addons/utils/SkeletonUtils.js');
   const root = clone(gltf.scene);
-  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; o.material = o.material.clone(); } });
+  root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; o.material = o.material.clone(); o.material.envMapIntensity = 0.55; } });
   const bones = {};
   root.traverse((o) => { if (o.isBone) bones[o.name.replace(/^mixamorig:?/, '')] = o; });
   // normalise height to 1.66 m, feet on the floor
@@ -115,7 +116,7 @@ export async function createRealDancer(opts = {}) {
 
   const qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), qw = new THREE.Quaternion(), qp = new THREE.Quaternion();
   const v = new THREE.Vector3(), v2 = new THREE.Vector3();
-  let clip = null, floor = 0, k = 1;
+  let clip = null, floor = 0, k = 1, offsets = null;
 
   function frameQuat(c, f, s, out) {
     const o = f * c.stride + 3 + s * 4, F = c.frames;
@@ -129,6 +130,7 @@ export async function createRealDancer(opts = {}) {
     v.set(F[o0] + (F[o1] - F[o0]) * a, F[o0 + 1] + (F[o1 + 1] - F[o0 + 1]) * a, F[o0 + 2] + (F[o1 + 2] - F[o0 + 2]) * a).multiplyScalar(k / 1000);
     if (f1 === 0) v.set(F[o0], F[o0 + 1], F[o0 + 2]).multiplyScalar(k / 1000);
     if (!travel) { v.x = 0; v.z = 0; }
+    else if (offsets) { v.x += offsets[2 * f0] + (offsets[2 * f1] - offsets[2 * f0]) * a; v.z += offsets[2 * f0 + 1] + (offsets[2 * f1 + 1] - offsets[2 * f0 + 1]) * a; }
     v.y += floor;
     // segments, parent first
     root.updateMatrixWorld(true);
@@ -143,9 +145,29 @@ export async function createRealDancer(opts = {}) {
     }
   }
   const fitCache = new WeakMap();
+  // keep planted feet planted: our body is not the recorded dancer's, so the recorded hip path makes the feet
+  // skate a little. Wherever a foot is down and still, move the hips so that foot stays exactly where it landed.
+  function footLock(c) {
+    const n = c.n, feet = [[], []], foot = (toe, ank) => { const a = wp(toe), b = wp(ank); return [(a.x + b.x) / 2, Math.min(a.y, b.y - 0.07), (a.z + b.z) / 2]; };
+    for (let f = 0; f < n; f++) { pose(f / c.fps); feet[0].push(foot('LeftToeBase', 'LeftFoot')); feet[1].push(foot('RightToeBase', 'RightFoot')); }
+    const off = new Float32Array(n * 2), anchor = [null, null]; let cx = 0, cz = 0;
+    for (let f = 0; f < n; f++) {
+      let sx = 0, sz = 0, m = 0;
+      for (let s = 0; s < 2; s++) {
+        const p = feet[s][f], q = feet[s][Math.max(0, f - 1)], still = Math.hypot(p[0] - q[0], p[2] - q[2]) < 0.025 && p[1] < 0.08;
+        if (still) { if (!anchor[s]) anchor[s] = [p[0] + cx, p[2] + cz]; sx += anchor[s][0] - p[0]; sz += anchor[s][1] - p[2]; m++; } else anchor[s] = null;
+      }
+      if (m) { cx = sx / m; cz = sz / m; }
+      off[2 * f] = cx; off[2 * f + 1] = cz;
+    }
+    // soften the corrections so the body never jerks
+    const out = new Float32Array(n * 2), W = 4;
+    for (let f = 0; f < n; f++) { let ax = 0, az = 0, cnt = 0; for (let j = -W; j <= W; j++) { const g = Math.min(n - 1, Math.max(0, f + j)); ax += off[2 * g]; az += off[2 * g + 1]; cnt++; } out[2 * f] = ax / cnt; out[2 * f + 1] = az / cnt; }
+    return out;
+  }
   async function setClip(id) {
     const c = await loadClip(id);
-    clip = c; k = legLen / c.leg;
+    clip = c; k = legLen / c.leg; offsets = null;
     if (!fitCache.has(c)) {
       // sample the clip once: lift it so the lowest foot rests on the floor, and measure how much room the whole body needs
       floor = 0; const lows = [], tops = []; let r = 0;
@@ -158,9 +180,10 @@ export async function createRealDancer(opts = {}) {
         tops.push(top);
       }
       lows.sort((p, q) => p - q); const fl = -lows[Math.floor(lows.length * 0.05)];
-      fitCache.set(c, { floor: fl, top: Math.max(...tops) + fl + 0.12, r: r + 0.15 });
+      floor = fl; offsets = null;
+      fitCache.set(c, { floor: fl, top: Math.max(...tops) + fl + 0.12, r: r + 0.15, offsets: footLock(c) });
     }
-    const fit = fitCache.get(c); floor = fit.floor; c.fit = fit;
+    const fit = fitCache.get(c); floor = fit.floor; offsets = fit.offsets; c.fit = fit;
     pose(0);
     return c;
   }
@@ -176,12 +199,15 @@ export function createViewer(host, { background = '#111111' } = {}) {
   renderer.setPixelRatio(Math.min(2, devicePixelRatio));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
   host.appendChild(renderer.domElement);
   const scene = new THREE.Scene(); scene.background = new THREE.Color(background);
+  // soft light from every side, as in a studio with white walls, so skin and cloth read as real materials
+  const pmrem = new THREE.PMREMGenerator(renderer); scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.55;
   scene.fog = new THREE.Fog(background, 9, 22);
-  scene.add(new THREE.HemisphereLight('#ffffff', '#4a4a4a', 2.1));
-  const key = new THREE.DirectionalLight('#ffffff', 2.6); key.position.set(2.5, 5, 4); key.castShadow = true;
-  key.shadow.mapSize.set(1024, 1024); Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); scene.add(key); scene.add(key.target);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#4a4a4a', 1.1));
+  const key = new THREE.DirectionalLight('#fff4e8', 2.4); key.position.set(2.5, 5, 4); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 4; key.shadow.bias = -0.0004; Object.assign(key.shadow.camera, { left: -3, right: 3, top: 3, bottom: -3 }); scene.add(key); scene.add(key.target);
   const fill = new THREE.DirectionalLight('#ffffff', 0.8); fill.position.set(-3, 2, 3); scene.add(fill);
   const rim = new THREE.DirectionalLight('#ff5a4c', 1.6); rim.position.set(-3, 3.5, -4); scene.add(rim);
   // a pool of light on a dark stage floor
