@@ -81,6 +81,8 @@ class StageView {
     }
     // the number line: distance from centre along the front, in metres, as on a real stage
     this.numLine = el('g', { 'font-size': 13, fill: '#a09a94', 'text-anchor': 'middle' }, floor);
+    this.depthLine = el('g', { 'font-size': 12, fill: '#a09a94', 'text-anchor': 'end' }, floor);
+    this.gridLayer = el('g', { opacity: 0 }, floor);
     // apron edge and the house
     el('rect', { x: 0, y: TOP + DEPTH + 24, width: W, height: 3, fill: '#d92b21' }, floor);
     el('rect', { x: 0, y: TOP + DEPTH + 27, width: W, height: H - (TOP + DEPTH + 27), fill: '#0a0a0a' }, floor);
@@ -106,7 +108,7 @@ class StageView {
     this.propLayer = el('g', {}, this.svg);
     this.lights = el('g', { style: 'mix-blend-mode:screen' }, this.svg);
     this.trailLayer = el('g', {}, this.svg);
-    this.paths = el('g', {}, this.svg);
+    this.paths = el('g', { class: 'paths' }, this.svg);
     this.journeyLayer = el('g', {}, this.svg);
     this.layer = el('g', {}, this.svg);
     this.marquee = el('rect', { fill: 'rgba(217,43,33,0.14)', stroke: '#d92b21', 'stroke-width': 2, 'stroke-dasharray': '6 6', visibility: 'hidden' }, this.svg);
@@ -117,16 +119,27 @@ class StageView {
     this.labels();
     this.setMeters(opts.meters || 10);
   }
-  setMeters(w) {
-    this.meters = w; this.numLine.innerHTML = '';
-    // a tick and a number at every whole metre from the centre (every two on a wide stage)
+  setMeters(w, d) {
+    this.meters = w; this.depth = d || this.depth || 8; this.numLine.innerHTML = ''; this.depthLine.innerHTML = ''; this.gridLayer.innerHTML = '';
+    // a tick and a number at every whole metre from the centre (every two on a wide stage), as on a real stage
     const step = w > 16 ? 2 : 1;
     for (let m = 0; m <= w / 2 + 1e-6; m += step) for (const sgn of m ? [-1, 1] : [1]) {
       const x = PADX + (0.5 + (sgn * m) / w) * (W - 2 * PADX);
       el('rect', { x: x - 0.75, y: TOP + DEPTH - 22, width: 1.5, height: 7, fill: '#6a6460' }, this.numLine);
       const t = el('text', { x, y: TOP + DEPTH - 4 }, this.numLine); t.textContent = m;
+      el('line', { x1: x, y1: TOP, x2: x, y2: TOP + DEPTH, stroke: m ? '#ffffff' : '#d92b21', 'stroke-width': m ? 0.8 : 1.4 }, this.gridLayer);
+    }
+    // depth: metres from the front edge, along the side
+    const dd = this.depth, dstep = dd > 12 ? 2 : 1;
+    for (let m = dstep; m <= dd + 1e-6; m += dstep) {
+      const y = TOP + DEPTH - (m / dd) * DEPTH;
+      const t = el('text', { x: PADX - 6, y: y + 4 }, this.depthLine); t.textContent = m;
+      if (m) el('line', { x1: PADX, y1: y, x2: W - PADX, y2: y, stroke: '#ffffff', 'stroke-width': 0.8 }, this.gridLayer);
     }
   }
+  setGrid(on) { this.gridLayer.setAttribute('opacity', on ? 0.16 : 0); }
+  // the number a dancer stands on: metres from centre along the front, to the half metre
+  placeNumber(p) { if (p[0] < 0 || p[0] > 1) return ''; const m = Math.round(Math.abs(p[0] - 0.5) * this.meters * 2) / 2; return String(m); }
   // set pieces and marks on the floor: boxes, pillars, labels
   drawProps(props, selected) {
     this.propLayer.innerHTML = '';
@@ -182,6 +195,7 @@ class StageView {
         n.dot = el('circle', { r: 26, class: 'dot' }, n);
         n.num = el('text', { 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': 22, 'font-weight': 600 }, n);
         n.name = el('text', { 'text-anchor': 'middle', y: 58, 'font-size': 18, fill: '#f2f2f2', 'paint-order': 'stroke', stroke: '#0a0a0a', 'stroke-width': 4 }, n);
+        n.place = el('text', { 'text-anchor': 'middle', y: -36, 'font-size': 16, 'font-weight': 600, fill: '#ffd7d2', 'paint-order': 'stroke', stroke: '#0a0a0a', 'stroke-width': 4 }, n);
         n.dataset.id = d.id;
         this.nodes.set(d.id, n);
         const pool = el('ellipse', { rx: 74, ry: 46, fill: this.lightFill }, this.lights);
@@ -193,6 +207,7 @@ class StageView {
       n.num.setAttribute('fill', light ? '#0a0a0a' : '#ffffff');
       n.num.textContent = i + 1;
       n.name.textContent = d.name;
+      n.place.textContent = this.showPlace ? this.placeNumber(positions[d.id] || [0.5, 0.5, 0]) : '';
       n.setAttribute('aria-label', `${d.name}, רקדנית ${i + 1}`);
       const p = positions[d.id] || [0.5, 0.5, 0];
       const [x, y] = this.map(p);
@@ -231,15 +246,22 @@ class StageView {
       els.forEach((e, q) => { const seg = t.slice(Math.floor((q * n) / 4), Math.floor(((q + 1) * n) / 4) + 1); e.setAttribute('points', seg.map((v) => v[0].toFixed(1) + ',' + v[1].toFixed(1)).join(' ')); });
     });
   }
-  drawPaths(dancers, from, to) {
+  drawPaths(dancers, from, to, via, editable) {
     this.paths.innerHTML = '';
     if (!from || !to) return;
     dancers.forEach((d) => {
       const a = from[d.id], b = to[d.id]; if (!a || !b) return;
       const [x1, y1] = this.map(a), [x2, y2] = this.map(b);
       if (Math.hypot(x2 - x1, y2 - y1) < 4) return;
-      el('line', { x1, y1, x2, y2, stroke: d.color, 'stroke-width': 3, 'stroke-dasharray': '2 10', 'stroke-linecap': 'round', opacity: 0.85 }, this.paths);
+      const c = via && via[d.id] ? this.map(via[d.id]) : [(x1 + x2) / 2, (y1 + y2) / 2];
+      el('path', { d: `M${x1} ${y1} Q${c[0]} ${c[1]} ${x2} ${y2}`, fill: 'none', stroke: d.color, 'stroke-width': 3, 'stroke-dasharray': '2 10', 'stroke-linecap': 'round', opacity: 0.85 }, this.paths);
       el('circle', { cx: x1, cy: y1, r: 9, fill: 'none', stroke: d.color, 'stroke-width': 2, opacity: 0.7 }, this.paths);
+      if (editable) {
+        // the handle sits on the curve's middle; dragging it bends the route
+        const mx = 0.25 * x1 + 0.5 * c[0] + 0.25 * x2, my = 0.25 * y1 + 0.5 * c[1] + 0.25 * y2;
+        const h = el('circle', { class: 'via-h', cx: mx, cy: my, r: 8, fill: '#0a0a0a', stroke: d.color, 'stroke-width': 3 }, this.paths); h.dataset.id = d.id;
+        const tt = el('title', {}, h); tt.textContent = 'גררו כדי לעקם את המסלול. לחיצה כפולה מיישרת אותו.';
+      }
     });
   }
 }
@@ -256,7 +278,12 @@ function poseAt(state, tCounts) {
       const local = tCounts - start, mv = Math.min(f.move, f.counts);
       const k = i === 0 ? 1 : ease(clamp(mv ? local / mv : 1, 0, 1));
       const out = {};
-      state.dancers.forEach((d) => { const a = prev[d.id] || f.pos[d.id] || [0.5, 0.5, 0], b = f.pos[d.id] || a; out[d.id] = [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, turn(a[2] || 0, b[2] || 0, k)]; });
+      state.dancers.forEach((d) => {
+        const a = prev[d.id] || f.pos[d.id] || [0.5, 0.5, 0], b = f.pos[d.id] || a, c = i > 0 && f.via && f.via[d.id];
+        const x = c ? (1 - k) * (1 - k) * a[0] + 2 * (1 - k) * k * c[0] + k * k * b[0] : a[0] + (b[0] - a[0]) * k;
+        const y = c ? (1 - k) * (1 - k) * a[1] + 2 * (1 - k) * k * c[1] + k * k * b[1] : a[1] + (b[1] - a[1]) * k;
+        out[d.id] = [x, y, turn(a[2] || 0, b[2] || 0, k)];
+      });
       return { pos: out, index: i, local };
     }
     start = end;
@@ -369,13 +396,15 @@ function full(app) {
   } catch (e) { state = null; }
   const firstVisit = !lib.cur;
   if (!state || !state.formations || !state.formations.length) { state = defaultState(); if (!lib.cur) { lib.cur = newId(); lib.items[lib.cur] = { title: state.title, updated: Date.now() }; } }
-  state.stage = state.stage || { w: 10 }; state.props = state.props || [];
+  state.stage = state.stage || { w: 10 }; state.stage.d = state.stage.d || 8; state.props = state.props || [];
+  if (state.stage.place === undefined) state.stage.place = true;
   saveLib();
   let sel = 0, playing = false, t = 0, raf = 0, lastCount = -1, voice = false, showPaths = true, mode3d = null, player = null, click = !state.music;
   const selSet = new Set(); let scrubbing = false, showJourney = false, selProp = null;
   const undo = [], redo = [];
   const $ = (q) => app.querySelector(q);
   const view = new StageView($('.stage-host'), { label: 'הבמה', editable: true, meters: state.stage.w });
+  view.setMeters(state.stage.w, state.stage.d); view.showPlace = state.stage.place; view.setGrid(!!state.stage.grid);
 
   const save = () => {
     try {
@@ -387,21 +416,26 @@ function full(app) {
   function restore(from, to) {
     const s2 = from.pop(); if (!s2) { flash(from === undo ? 'אין עוד פעולות לבטל.' : 'אין פעולה לחזור אליה.'); return; }
     to.push(JSON.stringify(state)); state = JSON.parse(s2); sel = Math.min(sel, state.formations.length - 1); selSet.clear(); selProp = null;
-    view.setMeters(state.stage.w); renderAll(); save();
+    view.setMeters(state.stage.w, state.stage.d); view.showPlace = state.stage.place; view.setGrid(!!state.stage.grid); renderAll(); renderStagePane(); save();
   }
   const startOf = (i) => state.formations.slice(0, i).reduce((a, f) => a + f.counts, 0);
   const bpmNow = () => (state.music ? state.music.bpm : state.bpm);
   const songTimeOf = (counts) => state.music.offset + (counts * 60) / state.music.bpm;
   const countsOfSong = (sec) => ((sec - state.music.offset) * state.music.bpm) / 60;
 
+  // chart numbers like a stage manager's: section.chart (1.1, 1.2, 2.1…), or 1, 2, 3 without sections
+  function chartNumbers() {
+    let sec = 0, k = 0, last = null; const any = state.formations.some((f) => f.section);
+    return state.formations.map((f) => { if (!any) return String(++k); if ((f.section || '') !== last || sec === 0) { sec++; k = 0; last = f.section || ''; } return `${sec}.${++k}`; });
+  }
   function renderTimeline() {
-    const tl = $('.timeline'); tl.innerHTML = '';
+    const tl = $('.timeline'); tl.innerHTML = ''; const nums = chartNumbers();
     state.formations.forEach((f, i) => {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'block'; b.style.flexGrow = f.counts;
       b.setAttribute('aria-pressed', i === sel);
       // a tiny top view of the formation, so the timeline reads like a storyboard
       const dots = state.dancers.map((d) => { const q = f.pos[d.id]; return q ? `<circle cx="${(q[0] * 100).toFixed(1)}" cy="${(q[1] * 60).toFixed(1)}" r="4.2" fill="${d.color}"/>` : ''; }).join('');
-      b.innerHTML = `<svg class="bthumb" viewBox="-6 -6 112 72" aria-hidden="true">${dots}</svg><span class="bn">${escapeHtml(f.name)}</span><span class="bc">${f.counts} ספירות · מעבר ${f.move}</span>`;
+      b.innerHTML = `<svg class="bthumb" viewBox="-6 -6 112 72" aria-hidden="true">${dots}</svg><span class="bn"><b class="bnum">${nums[i]}</b> ${escapeHtml(f.name)}</span><span class="bc">${f.section ? escapeHtml(f.section) + ' · ' : ''}${f.counts} ספירות · מעבר ${f.move}</span>`;
       b.addEventListener('click', () => { const was = playing; stop(); scrubbing = false; sel = i; t = was ? startOf(i) : startOf(i) + f.counts - 0.001; renderAll(); if (was) play(); });
       tl.appendChild(b);
     });
@@ -432,6 +466,9 @@ function full(app) {
     $('#f-name').value = f.name; $('#f-counts').value = f.counts; $('#f-move').value = f.move;
     $('#f-move').max = f.counts;
     const nt = $('#f-notes'); if (nt) nt.value = f.note || '';
+    const fs = $('#f-section'); if (fs) fs.value = f.section || '';
+    const fc = $('#f-cue'); if (fc) fc.value = f.cue || '';
+    renderAct();
     $('.sel-label').textContent = `מערך ${sel + 1} מתוך ${state.formations.length}`;
   }
   function renderCast() {
@@ -455,7 +492,9 @@ function full(app) {
     const one = selSet.size === 1 ? [...selSet][0] : null;
     view.draw(state.dancers, pos, { selected: selSet, handle: one, playing: live });
     view.drawProps(state.props, selProp);
-    if (showPaths && !live && sel > 0) view.drawPaths(state.dancers, state.formations[sel - 1].pos, f.pos); else view.drawPaths(state.dancers, null, null);
+    view.showPlace = state.stage.place;
+    if (showPaths && !live && sel > 0) view.drawPaths(state.dancers, state.formations[sel - 1].pos, f.pos, f.via, true); else view.drawPaths(state.dancers, null, null);
+    renderAct();
     const jd = one && showJourney && !live ? state.dancers.find((d) => d.id === one) : null;
     view.drawJourney(jd && jd.color, jd ? state.formations.map((x) => x.pos[jd.id]).filter(Boolean) : null);
     selTools();
@@ -473,7 +512,7 @@ function full(app) {
   // pointer on the stage: a tap selects, Shift or Ctrl adds, a frame on the empty floor selects many,
   // and dragging moves everyone who is selected together
   const tools = document.createElement('div'); tools.className = 'fx-seltools'; tools.hidden = true;
-  tools.innerHTML = '<span class="fx-seln"></span><button type="button" data-al="row">לשורה אחת</button><button type="button" data-al="col">לטור אחד</button><button type="button" data-al="spread">ריווח שווה</button><button type="button" data-al="mirror">היפוך צדדים</button><button type="button" data-al="none">ביטול בחירה</button>';
+  tools.innerHTML = '<span class="fx-seln"></span><button type="button" data-al="row">לשורה אחת</button><button type="button" data-al="col">לטור אחד</button><button type="button" data-al="spread">ריווח שווה</button><button type="button" data-al="mirror">היפוך צדדים</button><button type="button" data-al="rotL" aria-label="סיבוב הקבוצה נגד כיוון השעון">↺</button><button type="button" data-al="rotR" aria-label="סיבוב הקבוצה עם כיוון השעון">↻</button><button type="button" data-al="none">ביטול בחירה</button>';
   $('.stage-host').appendChild(tools);
   function selTools() { const n = selSet.size; tools.hidden = n < 2 || playing || scrubbing; if (n >= 2) tools.querySelector('.fx-seln').textContent = `${n} רקדניות נבחרו`; }
   tools.addEventListener('click', (e) => {
@@ -493,12 +532,19 @@ function full(app) {
       const lo = f.pos[order[0]][axis], hi = f.pos[order[order.length - 1]][axis];
       order.forEach((id, i) => { const q = f.pos[id].slice(); q[axis] = lo + ((hi - lo) * i) / (order.length - 1); f.pos[id] = q; });
     }
+    if (k === 'rotL' || k === 'rotR') {
+      // rotate the group about its centre in real metres, so the shape stays true, and turn their facings with it
+      const w = state.stage.w, d = state.stage.d, ang = (k === 'rotR' ? 1 : -1) * Math.PI / 12, cx = avg(xs) * w, cy = avg(ys) * d;
+      ids.forEach((id) => { const q = f.pos[id], X = q[0] * w - cx, Y = q[1] * d - cy; f.pos[id] = [clamp((cx + X * Math.cos(ang) - Y * Math.sin(ang)) / w, -0.045, 1.045), clamp((cy + X * Math.sin(ang) + Y * Math.cos(ang)) / d, 0.02, 0.98), (((q[2] || 0) - (ang * 180) / Math.PI) % 360 + 360) % 360]; });
+    }
     if (k === 'mirror') { const lo = Math.min(...xs), hi = Math.max(...xs); ids.forEach((id) => { const q = f.pos[id]; f.pos[id] = [lo + hi - q[0], q[1], (360 - (q[2] || 0)) % 360]; }); }
   }
   let drag = null;
   view.svg.addEventListener('pointerdown', (e) => {
     if (playing || e.target.closest('.face-handle')) return;
     const q = view.toSvg(e), g = e.target.closest('.dancer'), pr = e.target.closest('.prop'), add = e.shiftKey || e.ctrlKey || e.metaKey;
+    const vh = e.target.closest('.via-h');
+    if (vh) { snapshot(); drag = { kind: 'via', id: vh.dataset.id, moved: false }; view.svg.setPointerCapture(e.pointerId); e.preventDefault(); return; }
     if (scrubbing) { scrubbing = false; t = startOf(sel) + state.formations[sel].counts - 0.001; }
     if (g) {
       const id = g.dataset.id;
@@ -527,13 +573,18 @@ function full(app) {
       state.dancers.forEach((d) => { const p = f.pos[d.id]; if (!p) return; const [x, y] = view.map(p); if (x >= x0 && x <= x1 && y >= y0 && y <= y1) selSet.add(d.id); });
       drawNow(); return;
     }
+    if (drag.kind === 'via') {
+      const f = state.formations[sel], a = state.formations[sel - 1].pos[drag.id], b = f.pos[drag.id]; if (!a || !b) return;
+      const m = view.unmapRaw(q.x, q.y); f.via = f.via || {};
+      f.via[drag.id] = [2 * m[0] - 0.5 * a[0] - 0.5 * b[0], 2 * m[1] - 0.5 * a[1] - 0.5 * b[1]]; drag.moved = true; drawNow(); return;
+    }
     const cur = view.unmapRaw(q.x, q.y), dx = cur[0] - drag.start[0], dy = cur[1] - drag.start[1];
     if (Math.abs(dx) + Math.abs(dy) > 0.002) drag.moved = true;
     if (drag.kind === 'prop') { drag.prop.x = clamp(drag.orig[0] + dx, 0, 1); drag.prop.y = clamp(drag.orig[1] + dy, 0, 1); drawNow(); return; }
     const f = state.formations[sel], snapOn = $('#snap').checked && drag.orig.size === 1;
     drag.orig.forEach((o, id) => {
       let x = clamp(o[0] + dx, -0.045, 1.045), y = clamp(o[1] + dy, 0.02, 0.98);
-      if (snapOn && x >= 0 && x <= 1) { x = Math.round(x * 16) / 16; y = Math.round(y * 10) / 10; }
+      if (snapOn && x >= 0 && x <= 1) { const w = state.stage.w, d = state.stage.d; x = 0.5 + Math.round((x - 0.5) * w * 2) / 2 / w; y = 1 - Math.round((1 - y) * d * 2) / 2 / d; x = clamp(x, 0, 1); y = clamp(y, 0.02, 0.98); }
       f.pos[id] = [x, y, o[2] || 0];
     });
     drawNow();
@@ -541,10 +592,11 @@ function full(app) {
   const endDrag = () => {
     if (!drag) return; const k = drag; drag = null; view.showMarquee(null);
     if (k.kind === 'frame') { renderCast(); drawNow(); return; }
-    if (!k.moved) { undo.pop(); return; }
+    if (!k.moved) { undo.pop(); if (k.kind === 'dancers') renderAct(); return; }
     renderTimeline(); save();
   };
   view.svg.addEventListener('pointerup', endDrag); view.svg.addEventListener('pointercancel', endDrag);
+  view.svg.addEventListener('dblclick', (e) => { const vh = e.target.closest('.via-h'); if (!vh) return; const f = state.formations[sel]; if (f.via) { snapshot(); delete f.via[vh.dataset.id]; drawNow(); save(); } });
   view.svg.style.touchAction = 'none';
 
   // turning a dancer: drag the round handle, or use the facing buttons, or Q / E
@@ -874,7 +926,7 @@ function full(app) {
     $('.prop-count').textContent = state.props.length ? `${state.props.length} על הבמה` : 'עוד אין';
   }
   if ($('#stage-w')) {
-    $('#stage-w').addEventListener('change', (e) => { snapshot(); state.stage.w = clamp(+e.target.value || 10, 4, 30); view.setMeters(state.stage.w); renderStagePane(); save(); });
+    $('#stage-w').addEventListener('change', (e) => { snapshot(); state.stage.w = clamp(+e.target.value || 10, 4, 30); view.setMeters(state.stage.w, state.stage.d); renderStagePane(); drawNow(); save(); });
     const addProp = (kind) => {
       snapshot();
       const pr = { id: 'p' + newId(), kind, x: 0.5, y: kind === 'mark' ? 0.86 : 0.3, text: { rect: 'קובייה', circle: 'עמוד', mark: 'סימון' }[kind] };
@@ -953,6 +1005,24 @@ function full(app) {
   // after the wizard, open on the music tab so the song comes next
   try { const tab = sessionStorage.getItem('ofridance-fx-tab'); if (tab) { sessionStorage.removeItem('ofridance-fx-tab'); setTimeout(() => { const b = app.querySelector(`[data-tab="${tab}"]`); if (b) b.click(); flash('הקטע מוכן. עכשיו מעלים שיר, או מתחילים להזיז רקדניות.'); }, 50); } } catch (e) {}
 
+  // section, cue line and what one dancer does in this formation
+  const fsec = $('#f-section'); if (fsec) fsec.addEventListener('change', () => { snapshot(); state.formations[sel].section = fsec.value.trim(); renderTimeline(); save(); });
+  const fcue = $('#f-cue'); if (fcue) fcue.addEventListener('input', () => { state.formations[sel].cue = fcue.value; save(); });
+  function renderAct() {
+    const box = $('.f-act'); if (!box) return;
+    const one = selSet.size === 1 ? state.dancers.find((d) => selSet.has(d.id)) : null;
+    box.hidden = !one || playing || scrubbing; if (!one) return;
+    const f = state.formations[sel], inp = $('#f-act');
+    $('.f-act-name').textContent = one.name;
+    if (document.activeElement !== inp) inp.value = (f.acts && f.acts[one.id]) || '';
+    inp.dataset.id = one.id;
+  }
+  const fact = $('#f-act'); if (fact) fact.addEventListener('input', () => { const f = state.formations[sel]; f.acts = f.acts || {}; f.acts[fact.dataset.id] = fact.value; save(); });
+  // stage tab: depth, numbers on the dancers, grid
+  const sd = $('#stage-d'); if (sd) { sd.value = state.stage.d; sd.addEventListener('change', () => { snapshot(); state.stage.d = clamp(+sd.value || 8, 3, 30); view.setMeters(state.stage.w, state.stage.d); drawNow(); save(); }); }
+  const pl = $('#show-place'); if (pl) { pl.checked = state.stage.place; pl.addEventListener('change', () => { state.stage.place = pl.checked; drawNow(); save(); }); }
+  const gr = $('#show-grid'); if (gr) { gr.checked = !!state.stage.grid; gr.addEventListener('change', () => { state.stage.grid = gr.checked; view.setGrid(gr.checked); save(); }); }
+
   // the side panel of the app is split into tabs
   app.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => {
     app.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', x === b));
@@ -1001,23 +1071,24 @@ function printSheet(state) {
     <p>${state.formations.length} מערכים · ${Math.ceil(T / 8)} שמיניות · ${song} · במה ברוחב ${w} מטר</p>
     <ul class="ps-cast">${state.dancers.map((d, i) => `<li><span class="sw" style="background:${d.color}">${i + 1}</span>${escapeHtml(d.name)}</li>`).join('')}</ul>
     <p class="ps-key">המספרים על קדמת הבמה הם מטרים מהמרכז. "ימינה" ו"שמאלה" הם מנקודת המבט של הרקדנית שעומדת מול הקהל.</p></section>`;
-  let start = 0;
+  let start = 0, sec = 0, k = 0, last = null; const anySec = state.formations.some((f) => f.section);
+  const nums = state.formations.map((f) => { if (!anySec) return String(++k); if ((f.section || '') !== last || sec === 0) { sec++; k = 0; last = f.section || ''; } return `${sec}.${++k}`; });
   state.formations.forEach((f, i) => {
     const box = document.createElement('figure'); box.className = 'ps-form';
-    const v = new StageView(box, { label: f.name, meters: w });
+    const v = new StageView(box, { label: f.name, meters: w }); v.setMeters(w, (state.stage && state.stage.d) || 8); v.showPlace = true;
     v.drawProps(state.props, null); v.draw(state.dancers, f.pos);
-    if (i > 0) v.drawPaths(state.dancers, state.formations[i - 1].pos, f.pos);
+    if (i > 0) v.drawPaths(state.dancers, state.formations[i - 1].pos, f.pos, f.via, false);
     const cap = document.createElement('figcaption');
-    cap.innerHTML = `<b>${i + 1}. ${escapeHtml(f.name)}</b> · ספירות ${start + 1} עד ${start + f.counts} (שמינייה ${Math.floor(start / 8) + 1}) · מעבר של ${f.move} ספירות${f.note ? `<br>${escapeHtml(f.note)}` : ''}`;
+    cap.innerHTML = `<b>${nums[i]}. ${escapeHtml(f.name)}</b>${f.section ? ` · ${escapeHtml(f.section)}` : ''} · ספירות ${start + 1} עד ${start + f.counts} (שמינייה ${Math.floor(start / 8) + 1}) · מעבר של ${f.move} ספירות${f.cue ? `<br>ברגע: ${escapeHtml(f.cue)}` : ''}${f.note ? `<br>${escapeHtml(f.note)}` : ''}`;
     box.appendChild(cap); sheet.appendChild(box); start += f.counts;
   });
   // one page per dancer: everything she needs to know, formation by formation
   state.dancers.forEach((d, n) => {
     const sec = document.createElement('section'); sec.className = 'ps-dancer';
     let st2 = 0;
-    const rows = state.formations.map((f, i) => { const p = f.pos[d.id], prev = i ? state.formations[i - 1].pos[d.id] : null; const moves = prev && p && Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.01; const r = `<tr><td>${i + 1}. ${escapeHtml(f.name)}</td><td>${st2 + 1}</td><td>${whereText(p, w)}</td><td>${p ? faceText(p[2]) : '—'}</td><td>${i === 0 ? 'עמדת פתיחה' : moves ? `הולכת ב־${f.move} ספירות` : 'נשארת'}</td></tr>`; st2 += f.counts; return r; }).join('');
+    const rows = state.formations.map((f, i) => { const p = f.pos[d.id], prev = i ? state.formations[i - 1].pos[d.id] : null; const moves = prev && p && Math.hypot(p[0] - prev[0], p[1] - prev[1]) > 0.01; const act = f.acts && f.acts[d.id] ? escapeHtml(f.acts[d.id]) : ''; const r = `<tr><td>${nums[i]}. ${escapeHtml(f.name)}</td><td>${st2 + 1}</td><td>${whereText(p, w)}</td><td>${p ? faceText(p[2]) : '—'}</td><td>${i === 0 ? 'עמדת פתיחה' : moves ? `הולכת ב־${f.move} ספירות` : 'נשארת'}</td><td>${act}</td></tr>`; st2 += f.counts; return r; }).join('');
     sec.innerHTML = `<h2><span class="sw" style="background:${d.color}">${n + 1}</span>הדף של ${escapeHtml(d.name)}</h2><p class="ps-sub">${escapeHtml(state.title || '')}</p>
-      <table><thead><tr><th>מערך</th><th>ספירה</th><th>איפה</th><th>לאן מסתכלת</th><th>מעבר</th></tr></thead><tbody>${rows}</tbody></table>`;
+      <table><thead><tr><th>מערך</th><th>ספירה</th><th>איפה</th><th>לאן מסתכלת</th><th>מעבר</th><th>מה עושה</th></tr></thead><tbody>${rows}</tbody></table>`;
     sheet.appendChild(sec);
   });
   window.print();

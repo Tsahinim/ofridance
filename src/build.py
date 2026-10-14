@@ -6,7 +6,7 @@ SRC = ROOT / 'src'
 mark = (ROOT / 'brand' / 'ofridance-wordmark.svg').read_text(encoding='utf-8')
 mark = re.sub(r'<title>.*?</title>', '', mark).replace('<svg ', '<svg aria-hidden="true" focusable="false" ', 1)
 NAV = [('what.html', 'what', 'מהי כוריאוגרפיה'), ('hiphop.html', 'hiphop', 'היפ הופ'), ('modern.html', 'modern', 'מודרני'),
-       ('create.html', 'create', 'איך יוצרים'), ('formation.html', 'formation', 'עימוד'), ('watch.html', 'watch', 'לצפות'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('pro.html', 'pro', 'למתקדמות'), ('glossary.html', 'glossary', 'מילון')]
+       ('create.html', 'create', 'איך יוצרים'), ('formation.html', 'formation', 'עימוד'), ('dancer.html', 'dancer', 'הרקדנית'), ('watch.html', 'watch', 'לצפות'), ('path.html', 'path', 'מסלול <bdi dir="ltr">12+</bdi>'), ('pro.html', 'pro', 'למתקדמות'), ('glossary.html', 'glossary', 'מילון')]
 HEAD = '''<!doctype html>
 <html lang="he" dir="rtl"{theme}>
 <head>

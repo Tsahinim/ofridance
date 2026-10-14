@@ -118,3 +118,8 @@
   .print-sheet table { width: 100%; border-collapse: collapse; font-size: 10.5pt; margin-top: 4mm; }
   .print-sheet th, .print-sheet td { text-align: start; padding: 2mm 1.5mm; border-bottom: 0.2mm solid #999; }
 }
+
+.fx .timeline .bnum { color: #ff8a80; font-weight: 600; margin-inline-end: 0.2rem; }
+.fx .timeline .block[aria-pressed="true"] .bnum { color: #fff; }
+.stage-svg .via-h { cursor: grab; }
+.f-act[hidden] { display: none; }

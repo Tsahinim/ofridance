@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/site.css?v=1792007388">
-<link rel="stylesheet" href="assets/css/tools.css?v=1792007388">
-<link rel="stylesheet" href="assets/css/formation.css?v=1792007388">
+<link rel="stylesheet" href="assets/css/site.css?v=1792008138">
+<link rel="stylesheet" href="assets/css/tools.css?v=1792008138">
+<link rel="stylesheet" href="assets/css/formation.css?v=1792008138">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script>document.documentElement.classList.add('js')</script>
 </head>
@@ -73,10 +73,16 @@
           <h2>המערך <small class="sel-label"></small></h2>
           <label>שם <input id="f-name" type="text" maxlength="24"></label>
           <div class="row">
+            <label>חלק בשיר <input id="f-section" type="text" maxlength="20" list="sections" placeholder="בית, פזמון…"></label>
+            <label>ברגע (מילים או צליל) <input id="f-cue" type="text" maxlength="60" placeholder="למשל: על הדרופ"></label>
+          </div>
+          <datalist id="sections"><option value="פתיחה"><option value="בית"><option value="פזמון"><option value="גשר"><option value="דרופ"><option value="סיום"></datalist>
+          <div class="row">
             <label>אורך בספירות <input id="f-counts" type="number" min="1" max="64" step="1"></label>
             <label>ספירות למעבר <input id="f-move" type="number" min="0" max="64" step="1"></label>
           </div>
           <label class="fx-check"><input id="snap" type="checkbox" checked> הצמדה לסימוני הבמה</label>
+          <div class="f-act" hidden><label>מה <span class="f-act-name"></span> עושה במערך הזה <input id="f-act" type="text" maxlength="80" placeholder="למשל: סולו, נכנסת מימין, יורדת לרצפה"></label></div>
           <label>הערה לרקדניות <textarea id="f-notes" rows="2" maxlength="200" placeholder="למשל: שורה קדמית למטה, מבט לקהל"></textarea></label>
           <div class="actions"><button id="add-f" class="chip" type="button">מערך חדש אחרי זה</button><button id="del-f" class="chip" type="button">מחיקת המערך</button></div>
           <div class="actions"><button id="f-earlier" class="chip" type="button">להקדים</button><button id="f-later" class="chip" type="button">לאחר</button><button id="f-mirror" class="chip" type="button">היפוך ימין ושמאל</button></div>
@@ -136,8 +142,13 @@
         </section>
         <section class="fx-pane" data-pane="stage" aria-label="הבמה" hidden>
           <h2>גודל הבמה</h2>
-          <label>רוחב הבמה, במטרים <input id="stage-w" type="number" min="4" max="30" step="0.5"></label>
-          <p class="fx-hint">המספרים על קדמת הבמה הם מטרים מהמרכז, כמו פסי הסימון בבמה אמיתית. הם מופיעים גם בחוברת העימוד ובדף האישי של כל רקדנית.</p>
+          <div class="row">
+            <label>רוחב, במטרים <input id="stage-w" type="number" min="4" max="30" step="0.5"></label>
+            <label>עומק, במטרים <input id="stage-d" type="number" min="3" max="30" step="0.5"></label>
+          </div>
+          <label class="fx-check"><input id="show-place" type="checkbox" checked> המספר של כל רקדנית מעליה</label>
+          <label class="fx-check"><input id="show-grid" type="checkbox"> רשת של מטרים</label>
+          <p class="fx-hint">המספרים על קדמת הבמה הם מטרים מהמרכז, והמספרים בצד הם מטרים מקדמת הבמה, כמו פסי הסימון בבמה אמיתית. ההצמדה מיישרת לחצאי מטרים. הם מופיעים גם בחוברת העימוד ובדף האישי של כל רקדנית.</p>
           <h2>תפאורה וסימונים <small class="prop-count"></small></h2>
           <div class="actions"><button id="prop-rect" class="chip" type="button">קובייה או ספסל</button><button id="prop-circle" class="chip" type="button">עמוד</button><button id="prop-mark" class="chip" type="button">סימון על הרצפה</button></div>
           <div class="prop-edit" hidden>
@@ -193,7 +204,7 @@
     <p class="legal"><span>OFRIDANCE · כוריאוגרפיה בהיפ הופ ובמחול מודרני, מגיל 12</span><span>צילומים: Unsplash וארכיונים פתוחים, <a href="credits.html">רשימת קרדיטים</a></span></p>
   </div>
 </footer>
-<script src="assets/js/site.js?v=1792007388" defer></script>
-<script type="module" src="assets/js/stage.js?v=1792007388"></script>
+<script src="assets/js/site.js?v=1792008138" defer></script>
+<script type="module" src="assets/js/stage.js?v=1792008138"></script>
 </body>
 </html>
