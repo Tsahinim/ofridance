@@ -155,37 +155,6 @@ p + p { margin-top: 0.9em; }
   .topbar.open .submenu a:first-child { border-bottom: 0; margin: 0; }
 }
 
-/* ---------- accessibility menu ---------- */
-.a11y-btn {
-  position: fixed; inset-inline-end: 0; bottom: 5.5rem; z-index: 60; width: 3rem; height: 3rem;
-  display: grid; place-items: center; border: 0; cursor: pointer; background: #1351b4; color: #fff;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 0.25);
-}
-.a11y-btn svg { width: 1.9rem; height: 1.9rem; }
-.a11y-panel {
-  position: fixed; inset-inline-end: 3.5rem; bottom: 1rem; z-index: 61; width: min(20rem, calc(100vw - 4.5rem));
-  background: #fff; color: #0a0a0a; border: 2px solid #1351b4; box-shadow: 0 18px 40px rgb(0 0 0 / 0.3); padding: 1rem;
-  font-size: 1rem; line-height: 1.4;
-}
-.a11y-panel[hidden] { display: none; }
-.a11y-panel h2 { font-size: 1.15rem; margin: 0 0 0.75rem; letter-spacing: 0; }
-.a11y-panel .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-.a11y-panel button { min-height: 2.9rem; padding: 0.4rem 0.6rem; font: inherit; font-size: 0.95rem; text-align: start; border: 1px solid #bbb; background: #f4f4f4; color: #0a0a0a; cursor: pointer; }
-.a11y-panel button[aria-pressed="true"] { background: #1351b4; color: #fff; border-color: #1351b4; }
-.a11y-panel .foot { display: flex; justify-content: space-between; gap: 0.5rem; margin-top: 0.75rem; font-size: 0.92rem; }
-.a11y-panel .foot a { color: #1351b4; }
-.app-body .a11y-btn, .app-body .a11y-panel { display: none; }
-html.a11y-text-1 { font-size: 112.5%; }
-html.a11y-text-2 { font-size: 125%; }
-html.a11y-text-3 { font-size: 140%; }
-html.a11y-contrast { --bg: #000; --surface: #000; --surface-2: #111; --ink: #fff; --muted: #fff; --accent: #ffeb3b; --accent-ink: #000; }
-html.a11y-contrast body, html.a11y-contrast .topbar, html.a11y-contrast .submenu { background: #000 !important; color: #fff !important; }
-html.a11y-contrast img { filter: grayscale(1) contrast(1.15); }
-html.a11y-links a { text-decoration: underline !important; text-underline-offset: 0.18em; outline: 1px dashed currentColor; outline-offset: 2px; }
-html.a11y-font, html.a11y-font * { font-family: Arial, "Segoe UI", sans-serif !important; letter-spacing: 0.01em !important; }
-html.a11y-motion *, html.a11y-motion *::before, html.a11y-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-html.a11y-focus :focus-visible { outline: 4px solid #ff9800 !important; outline-offset: 3px !important; }
-
 /* ---------- HOME hero: name band and rails ---------- */
 .hero-tiles {
   --gap: 8px;
@@ -639,4 +608,3 @@ html.a11y-focus :focus-visible { outline: 4px solid #ff9800 !important; outline-
 .plain-list { margin: 0; padding-inline-start: 1.2em; display: grid; gap: 0.75em; }
 .plain-list li::marker { color: var(--accent); }
 .not-found-links { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.5rem; }
-body:has(.topbar.open) .a11y-btn, body:has(.topbar.open) .a11y-panel { display: none; }

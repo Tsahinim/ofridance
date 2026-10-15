@@ -21,8 +21,7 @@ MENU = [
     ('formation.html', 'עימוד', None),
     ('studio.html', 'כלים', [('studio.html', 'הסטודיו: כל הכלים'), ('formation.html', 'עימוד'), ('dancer.html', 'הרקדנית'),
                             ('counts.html', 'בונה השמיניות'), ('mirror.html', 'המראה'), ('stage.html', 'מדריך העימוד')]),
-    ('about.html', 'אודות', [('about.html', 'על OFRIDANCE'), ('accessibility.html', 'הצהרת נגישות'), ('privacy.html', 'פרטיות'),
-                             ('terms.html', 'תנאי שימוש'), ('credits.html', 'קרדיטים')]),
+    ('about.html', 'אודות', [('about.html', 'על OFRIDANCE'), ('credits.html', 'קרדיטים')]),
 ]
 
 HEAD = '''<!doctype html>
@@ -48,7 +47,7 @@ HEAD = '''<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Sans+Hebrew:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/site.css">
-{extra_head}<script>document.documentElement.classList.add('js');try{{var a=JSON.parse(localStorage.getItem('ofri-a11y')||'{{}}');for(var k in a)if(a[k])document.documentElement.classList.add('a11y-'+k+(a[k]===true?'':'-'+a[k]))}}catch(e){{}}</script>
+{extra_head}<script>document.documentElement.classList.add('js')</script>
 </head>
 <body{body_class}>
 <a class="skip" href="#main">דילוג לתוכן</a>
@@ -80,7 +79,7 @@ FOOT = '''<footer class="site-footer">
     <ul><li>ללמוד</li><li><a href="what.html">מהי כוריאוגרפיה</a></li><li><a href="create.html">איך יוצרים קטע</a></li><li><a href="path.html">מסלול <bdi dir="ltr">12+</bdi></a></li><li><a href="pro.html">למתקדמות</a></li><li><a href="watch.html">לצפות כמו כוריאוגרפית</a></li><li><a href="glossary.html">מילון המונחים</a></li><li><a href="create.html#safety">חימום ובטיחות</a></li><li><a href="path.html#parents">להורים</a></li></ul>
     <ul><li>הסגנונות</li><li><a href="hiphop.html">היפ הופ</a></li><li><a href="hiphop-pro.html">היפ הופ למתקדמות</a></li><li><a href="modern.html">מחול מודרני</a></li><li><a href="modern-pro.html">מודרני למתקדמות</a></li></ul>
     <ul><li>כלים</li><li><a href="studio.html">הסטודיו</a></li><li><a href="formation.html">עימוד</a></li><li><a href="dancer.html">הרקדנית</a></li><li><a href="counts.html">בונה השמיניות</a></li><li><a href="mirror.html">המראה</a></li><li><a href="stage.html">מדריך העימוד</a></li></ul>
-    <ul><li>על האתר</li><li><a href="about.html">אודות</a></li><li><a href="accessibility.html">הצהרת נגישות</a></li><li><a href="privacy.html">פרטיות</a></li><li><a href="terms.html">תנאי שימוש</a></li><li><a href="credits.html">קרדיטים</a></li></ul>
+    <ul><li>על האתר</li><li><a href="about.html">אודות</a></li><li><a href="credits.html">קרדיטים</a></li></ul>
   </div>
   <div></div>
   <div>
